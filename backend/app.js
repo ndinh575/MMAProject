@@ -1,22 +1,23 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
+const protectedRoutes = require('./routes/protectedRoute');
 // Các route khác
 const app = express();
 
+// Cấu hình Express
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors());
-app.use(bodyParser.json());
 
 // MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.log(err));
+connectDB();
 
 // Routes
+app.use('/auth', authRoutes);
+app.use('/protected', protectedRoutes);
 
 // Start server
 const PORT = process.env.PORT || 9999;
