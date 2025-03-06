@@ -1,0 +1,17 @@
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    transition: 0.3s;
+  }
+  .main-content {
+    width: 100%;
+    transition: 0.3s;
+  }
+  .sidebar a {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar.closed a span {
+    display: none;
+  }
