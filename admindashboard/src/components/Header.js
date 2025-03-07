@@ -2,8 +2,12 @@
 import React from "react";
 import { Badge, Dropdown, Nav, Navbar } from "react-bootstrap";
 import { FaBell, FaUserCircle } from "react-icons/fa";
+import { useCustomer } from "@/context/CustomerContext";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
+    const router = useRouter();
+    const {logout} = useCustomer();
     return (
         <>
             <Navbar bg="light" expand="lg" className="shadow-sm px-3">
@@ -16,7 +20,7 @@ const Header = () => {
                             <FaUserCircle size={24} className="me-2" /> Admin
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
-                            <Dropdown.Item>Logout</Dropdown.Item>
+                            <Dropdown.Item onClick={() => logout()}>Logout</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                 </Nav>

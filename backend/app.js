@@ -11,7 +11,12 @@ const app = express();
 // Cấu hình Express
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(
+    cors({
+      origin: "http://localhost:3000", // Allow only frontend origin
+      credentials: true, // Allow cookies and authentication headers
+    })
+  );
 
 // MongoDB connection
 connectDB();

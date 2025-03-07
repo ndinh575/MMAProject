@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { Container, Navbar, Nav, Row, Col, Card, Button, Dropdown, Badge } from "react-bootstrap";
 import { FaBars, FaTachometerAlt, FaShoppingCart, FaUsers, FaChartLine, FaBell, FaUserCircle, FaBox } from "react-icons/fa";
@@ -8,29 +8,50 @@ import Orders from "./Orders";
 import Customers from "./Customers";
 import Products from "./Products";
 import Header from "./Header";
-import Sidebar from "./SideBar";
+import Sidebar from "./Sidebar";
+import { useRouter } from "next/navigation";
+import { useCustomer } from "@/context/CustomerContext";
 
 export default function HomePage() {
-
     const [selectedItem, setSelectedItem] = useState("Dashboard");
+    const router = useRouter();
+    const { verifyToken } = useCustomer();
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const verifiedUser = await verifyToken();
+            if (!verifiedUser) {
+                router.push("/login"); // Redirect to login if not authenticated
+            } else {
+                setLoading(false); // Allow rendering only when authenticated
+            }
+        };
+
+        checkAuth();
+    }, []);
+
+    if (loading) return null;
+
     return (
         <div className="d-flex">
             {/* Sidebar */}
-            <Sidebar selectedItem={selectedItem} setSelectedItem={setSelectedItem}/>
+            <Sidebar selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
 
             {/* Main Content */}
             <div className="main-content flex-grow-1">
                 {/* Header */}
-                <Header/>
+                <Header />
 
                 {/* Dashboard Content */}
-                {selectedItem==="Dashboard" &&  <DashBoard/>}
+                {selectedItem === "Dashboard" && <DashBoard />}
 
-                {selectedItem==="Orders" &&  <Orders/>}
+                {selectedItem === "Orders" && <Orders />}
 
-                {selectedItem==="Customers" &&  <Customers/>}
+                {selectedItem === "Customers" && <Customers />}
 
-                {selectedItem==="Products" &&  <Products/>}
+                {selectedItem === "Products" && <Products />}
             </div>
 
 

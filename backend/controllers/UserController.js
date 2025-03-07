@@ -8,15 +8,15 @@ const jwt = require('jsonwebtoken');
  */
 exports.login = async (req, res) => {
     try {
-        const { name, password } = req.body;
+        const { email, password } = req.body;
 
         const users = await User.find();
 
-        // Find the user by username
-        const user = users.find(u => u.name === name);
+        // Find the user by email
+        const user = users.find(u => u.email === email);
 
         if (!user) {
-            return res.status(401).json({ message: 'Cannot find user name' });
+            return res.status(401).json({ message: 'Cannot find user email' });
         }
 
         // Compare the password
@@ -27,37 +27,12 @@ exports.login = async (req, res) => {
 
         // Create a JWT token
         const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.cookie("token", token, {
-            httpOnly: true,   // Prevent access from JavaScript
-            secure: false,     // Use only in HTTPS, set to false when in development to test in thunder client 
-            sameSite: "Strict", // Prevent CSRF attacks
-        });
-        res.json({ message: 'Login successful', token: token });
+        res.status(200).json({ message: 'Login successful', token: token });
 
 
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-};
-
-/**
- * @route   POST /api/logout
- * @desc    Logout a user
- * @access  Private
- */
-exports.logout = async (req, res) => {
-    try {
-        res.cookie("token", "", {
-            httpOnly: true,
-            secure: true, // Use in production with HTTPS
-            sameSite: "Strict",
-            expires: new Date(0) // Expire the cookie immediately
-        });
-        res.status(200).json({ message: "Logged out" });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-
 };
 
 /**

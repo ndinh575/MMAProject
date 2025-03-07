@@ -1,0 +1,153 @@
+[
+    {
+      "name": "Alice Johnson",
+      "email": "alice.johnson@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567890",
+      "address": "123 Maple Street, NY",
+      "avatar": "/uploads/alice.jpg",
+      "createdDate": "2024-01-05T08:30:00Z"
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob.smith@example.com",
+      "password": "hashedpassword123",
+      "role": "admin",
+      "phoneNumber": "+11234567891",
+      "address": "456 Oak Avenue, CA",
+      "avatar": "/uploads/bob.jpg",
+      "createdDate": "2024-01-10T10:15:00Z"
+    },
+    {
+      "name": "Charlie Brown",
+      "email": "charlie.brown@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567892",
+      "address": "789 Pine Road, TX",
+      "avatar": "/uploads/charlie.jpg",
+      "createdDate": "2024-01-15T14:45:00Z"
+    },
+    {
+      "name": "Diana Prince",
+      "email": "diana.prince@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567893",
+      "address": "1010 Wonder Street, DC",
+      "avatar": "/uploads/diana.jpg",
+      "createdDate": "2024-01-20T09:00:00Z"
+    },
+    {
+      "name": "Ethan Hunt",
+      "email": "ethan.hunt@example.com",
+      "password": "hashedpassword123",
+      "role": "admin",
+      "phoneNumber": "+11234567894",
+      "address": "2020 Spy Lane, FL",
+      "avatar": "/uploads/ethan.jpg",
+      "createdDate": "2024-01-25T18:30:00Z"
+    },
+    {
+      "name": "Fiona Gallagher",
+      "email": "fiona.gallagher@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567895",
+      "address": "3030 South Side, IL",
+      "avatar": "/uploads/fiona.jpg",
+      "createdDate": "2024-02-02T11:45:00Z"
+    },
+    {
+      "name": "George Lucas",
+      "email": "george.lucas@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567896",
+      "address": "4040 Film Blvd, CA",
+      "avatar": "/uploads/george.jpg",
+      "createdDate": "2024-02-07T15:20:00Z"
+    },
+    {
+      "name": "Hannah Baker",
+      "email": "hannah.baker@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567897",
+      "address": "5050 High School, WA",
+      "avatar": "/uploads/hannah.jpg",
+      "createdDate": "2024-02-12T08:10:00Z"
+    },
+    {
+      "name": "Ian Somerhalder",
+      "email": "ian.somerhalder@example.com",
+      "password": "hashedpassword123",
+      "role": "admin",
+      "phoneNumber": "+11234567898",
+      "address": "6060 Vampire Lane, LA",
+      "avatar": "/uploads/ian.jpg",
+      "createdDate": "2024-02-18T14:00:00Z"
+    },
+    {
+      "name": "Jessica Jones",
+      "email": "jessica.jones@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567899",
+      "address": "7070 Alias St, NY",
+      "avatar": "/uploads/jessica.jpg",
+      "createdDate": "2024-02-25T09:50:00Z"
+    },
+    {
+      "name": "Kevin Hart",
+      "email": "kevin.hart@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567900",
+      "address": "8080 Comedy Rd, CA",
+      "avatar": "/uploads/kevin.jpg",
+      "createdDate": "2024-03-01T10:30:00Z"
+    },
+    {
+      "name": "Laura Palmer",
+      "email": "laura.palmer@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567901",
+      "address": "9090 Mystery Ave, WA",
+      "avatar": "/uploads/laura.jpg",
+      "createdDate": "2024-03-05T12:15:00Z"
+    },
+    {
+      "name": "Michael Scott",
+      "email": "michael.scott@example.com",
+      "password": "hashedpassword123",
+      "role": "admin",
+      "phoneNumber": "+11234567902",
+      "address": "1010 Office Lane, PA",
+      "avatar": "/uploads/michael.jpg",
+      "createdDate": "2024-03-10T14:40:00Z"
+    },
+    {
+      "name": "Nancy Drew",
+      "email": "nancy.drew@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567903",
+      "address": "1111 Detective St, GA",
+      "avatar": "/uploads/nancy.jpg",
+      "createdDate": "2024-03-15T09:00:00Z"
+    },
+    {
+      "name": "Oscar Wilde",
+      "email": "oscar.wilde@example.com",
+      "password": "hashedpassword123",
+      "role": "user",
+      "phoneNumber": "+11234567904",
+      "address": "1212 Literature Rd, UK",
+      "avatar": "/uploads/oscar.jpg",
+      "createdDate": "2024-03-20T16:25:00Z"
+    }
+  ]
+  

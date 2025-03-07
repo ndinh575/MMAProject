@@ -2,8 +2,32 @@
 import React from "react";
 import { Container, Row, Col, Card, Table, ProgressBar } from "react-bootstrap";
 import { FaUser, FaShoppingCart, FaDollarSign, FaChartLine } from "react-icons/fa";
-
+import { useCustomer } from "@/context/CustomerContext";
 export default function DashBoard() {
+
+  const { customers } = useCustomer();
+
+  const today = new Date();
+  // Get first day of the current month
+  const firstDayThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  // Get first day of last month
+  const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+  const countCustomers = (startDate, endDate) => {
+    return customers.filter(customer => {
+      const createdDate = new Date(customer.createdDate);
+      return createdDate >= startDate && createdDate < endDate;
+    }).length;
+  };
+
+  const thisMonthCount = countCustomers(firstDayThisMonth, today);
+  const lastMonthCount = countCustomers(firstDayLastMonth, firstDayThisMonth);
+
+  console.log(thisMonthCount);
+  console.log(lastMonthCount);
+
+  const growthLastMonth = lastMonthCount > 0 ? ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100 : 0;
   return (
     <Container fluid className="mt-4">
       {/* Top Stats Cards */}
@@ -11,8 +35,8 @@ export default function DashBoard() {
         <Col md={3}>
           <Card className="shadow-sm text-center p-3">
             <FaUser size={30} className="text-primary mb-2" />
-            <Card.Title> Users </Card.Title>
-            <Card.Text className="fs-4">1,250</Card.Text>
+            <Card.Title> Customer Growth  </Card.Title>
+            <Card.Text className="fs-4">{growthLastMonth.toFixed(2)}%</Card.Text>
           </Card>
         </Col>
         <Col md={3}>
