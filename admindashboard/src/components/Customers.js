@@ -42,6 +42,14 @@ const data = [
     { month: "Jun", retained: 72, churned: 28 },
 ];
 
+const ordersData = [
+    { month: "Jan", orders: 120 },
+    { month: "Feb", orders: 150 },
+    { month: "Mar", orders: 180 },
+    { month: "Apr", orders: 200 },
+    { month: "May", orders: 220 },
+  ];
+
 export default function Customers() {
     const [currentPage, setCurrentPage] = useState(1);
     const customersPerPage = 5;
@@ -58,18 +66,17 @@ export default function Customers() {
 
             {/* Charts Section */}
             <Row>
+                {/* Customer Orders (Bar Chart) */}
                 <Col md={6}>
-                    <Card className="shadow-sm p-3">
-                        <Card.Title>Customer Distribution</Card.Title>
+                    <Card className="p-3 shadow-sm">
+                        <h5>Customer Orders & Activity</h5>
                         <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie data={customerData} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
-                                    {customerData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                                    ))}
-                                </Pie>
+                            <BarChart data={ordersData}>
+                                <XAxis dataKey="month" />
+                                <YAxis />
                                 <Tooltip />
-                            </PieChart>
+                                <Bar dataKey="orders" fill="#007bff" />
+                            </BarChart>
                         </ResponsiveContainer>
                     </Card>
                 </Col>

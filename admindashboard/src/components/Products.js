@@ -26,7 +26,7 @@ const Products = () => {
     return (
         <div className="container mt-4">
             <h3 className="text-center mb-4">Products Dashboard</h3>
-            <Row>
+            <Row className="mb-4">
                 <Card className="p-3 shadow-sm">
                     <h5 className="text-center">Product Sales & Stock Trends</h5>
                     <ResponsiveContainer width="100%" height={300}>
