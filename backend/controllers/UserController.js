@@ -1,11 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-/**
- * @route   POST /api/login
- * @desc    Login a user
- * @access  Private
- */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -35,11 +30,7 @@ exports.login = async (req, res) => {
     }
 };
 
-/**
- * @route   GET /api/users
- * @desc    Get all users
- * @access  Private (Admin only)
- */
+
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find().select("-password");
@@ -48,12 +39,6 @@ exports.getAllUsers = async (req, res) => {
         res.status(500).json({ message: "Server error", error });
     }
 }
-
-/**
- * @route   POST /api/users
- * @desc    Create a new user
- * @access  Public
- */
 
 exports.register = async (req, res) => {
     try {
@@ -69,11 +54,6 @@ exports.register = async (req, res) => {
     }
 };
 
-/**
- * @route   GET /api/users/:id
- * @desc    Get a single user by ID
- * @access  Private
- */
 exports.getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password");
@@ -85,12 +65,6 @@ exports.getUserProfile = async (req, res) => {
     }
 };
 
-
-/**
- * @route   PUT /api/users/:id
- * @desc    Update a user
- * @access  Private
- */
 exports.updateUser = async (req, res) => {
     try {
         const { name, email, phoneNumber, role } = req.body;
@@ -105,11 +79,6 @@ exports.updateUser = async (req, res) => {
     }
 }
 
-/**
- * @route   DELETE /api/users/:id
- * @desc    Delete a user
- * @access  Private (Admin only)
- */
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);

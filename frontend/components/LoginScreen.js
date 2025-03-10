@@ -6,22 +6,22 @@ import { View, TextInput, Button, Text, StyleSheet, Alert, Dimensions } from 're
 const { width } = Dimensions.get('window');
 const LoginScreen = () => {
     const { login } = useContext(UserContext);
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
 
     const handleLogin = async () => {
-        if (!username || !password) {
-            setError('Validation Error', 'Please enter both username and password');
+        if (!email || !password) {
+            setError('Validation Error', 'Please enter both email and password');
             return;
         }
 
         setLoading(true);
 
         try {
-            const response = await login(username, password);
+            const response = await login(email, password);
             if(response){
                 setError(null)
                 navigation.reset({
@@ -44,9 +44,9 @@ const LoginScreen = () => {
 
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={(text) => setUsername(text)}
+                placeholder="Email"
+                value={email}
+                onChangeText={(text) => setEmail(text)}
             />
 
             <TextInput

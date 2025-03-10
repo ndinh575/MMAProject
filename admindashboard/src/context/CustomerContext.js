@@ -13,20 +13,8 @@ export const CustomerProvider = ({ children }) => {
     // Fetch customers from API
     useEffect(() => {
         const fetchCustomers = async () => {
-
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                console.error("No token found, user not authenticated.");
-                return;
-            }
-
             try {
-                const response = await axios.get("http://localhost:9999/api/auth/users", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
+                const response = await axios.get("http://localhost:9999/api/auth/users");
                 setCustomers(response.data);
             } catch (error) {
                 console.error("Error fetching customers:", error);
@@ -41,12 +29,6 @@ export const CustomerProvider = ({ children }) => {
     // Add a new customer
     const addCustomer = async (customerData) => {
         try {
-            const token = localStorage.getItem("token"); // Retrieve token from storage
-
-            if (!token) {
-                console.error("No token found. User not authenticated.");
-                return; // Prevent API call if no token
-            }
 
             const response = await axios.post(
                 "http://localhost:9999/api/auth/register",
@@ -85,13 +67,6 @@ export const CustomerProvider = ({ children }) => {
     // Update customer
     const updateCustomer = async (id, updatedData) => {
         try {
-            const token = localStorage.getItem("token"); // Retrieve token from storage
-
-            if (!token) {
-                console.error("No token found. User not authenticated.");
-                window.location.href = "/login";
-                return; 
-            }
 
             await axios.put(
                 `http://localhost:9999/api/auth/users/${id}`,

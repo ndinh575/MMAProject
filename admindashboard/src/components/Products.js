@@ -2,18 +2,16 @@
 import React, { useState } from "react";
 import { Row, Col, Card, Table, Form, Button } from "react-bootstrap";
 import { FaSearch, FaPlus } from "react-icons/fa";
-
+import { useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useProduct } from "@/context/ProductContext";
 
 const Products = () => {
+    const router = useRouter();
+    const { products, loading } = useProduct();
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("");
-    const products = [
-        { id: 1, name: "Product A", category: "Electronics", price: "$199" },
-        { id: 2, name: "Product B", category: "Clothing", price: "$49" },
-        { id: 3, name: "Product C", category: "Home & Kitchen", price: "$29" },
-    ];
-
+    const categories = [...new Set(products.map(p => p.category))];
     const data = [
         { month: "Jan", sales: 400, stock: 2400 },
         { month: "Feb", sales: 300, stock: 2210 },
@@ -23,6 +21,7 @@ const Products = () => {
         { month: "Jun", sales: 800, stock: 2500 },
     ];
 
+    if (loading) return <p>Loading products...</p>;
     return (
         <div className="container mt-4">
             <h3 className="text-center mb-4">Products Dashboard</h3>
@@ -54,24 +53,31 @@ const Products = () => {
                 <Col md={3}>
                     <Form.Select value={filter} onChange={(e) => setFilter(e.target.value)}>
                         <option value="">All Categories</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Home & Kitchen">Home & Kitchen</option>
+                        {categories.map((category) => (
+                            <option key={category} value={category}>
+                                {category}
+                            </option>
+                        ))}
                     </Form.Select>
                 </Col>
                 <Col md={3}>
-                    <Button variant="primary">
+                    <Button variant="primary" onClick={() => router.push("/addproduct")}>
                         <FaPlus /> Add Product
                     </Button>
                 </Col>
             </Row>
-            <Table striped bordered hover>
+            <Row>
+            <Table responsive striped bordered hover>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Category</th>
-                        <th>Price</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Quantity</th>
+                        <th>Total Sales</th>
+                        <th>Profit</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,16 +86,26 @@ const Products = () => {
                             product.name.toLowerCase().includes(search.toLowerCase())
                         )
                         .filter((product) => (filter ? product.category === filter : true))
-                        .map((product) => (
-                            <tr key={product.id}>
-                                <td>{product.id}</td>
+                        .map((product, index) => (
+                            <tr key={product._id}>
+                                <td>{index + 1}</td>
                                 <td>{product.name}</td>
-                                <td>{product.category}</td>
-                                <td>{product.price}</td>
+                                <td>{product.cost_price + ' VND'}</td>
+                                <td>{product.selling_price + ' VND'}</td>
+                                <td>{product.stock_quantity}</td>
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <Button variant="primary me-3">Detail</Button>
+                                    <Button variant="warning me-3">Edit</Button>
+                                    <Button variant="danger me-3">Delete</Button>
+                                </td>
+
                             </tr>
                         ))}
                 </tbody>
             </Table>
+            </Row>
         </div>
     );
 };

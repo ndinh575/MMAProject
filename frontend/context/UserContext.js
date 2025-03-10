@@ -5,10 +5,10 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
 
-    const login = async (username, password) => {
+    const login = async (email, password) => {
         try {
             // Send the POST request to the backend
-            const response = await axios.post('http://localhost:9999/auth/login', { username, password });
+            const response = await axios.post('http://localhost:9999/api/auth/login', { email, password });
             
             // Extract the token from the response
             const token = response.data.token;
@@ -25,6 +25,22 @@ export const UserProvider = ({ children }) => {
             console.error('Login failed', error);
         }
     };
+
+    const verifyToken = async () => {
+        try {
+            const token = localStorage.getItem("token"); // Retrieve token from local storage
+            if (!token) return false; // If no token, user is not authenticated
+    
+            const response = await axios.get("http://localhost:9999/api/auth/verify-token", {
+                headers: { Authorization: `Bearer ${token}` }, // Attach token in headers
+            });
+    
+            return response.data; // Assuming response contains user data
+        } catch (error) {
+            console.error("Error verifying token:", error);
+            return false; // Return false if token is invalid/expired
+        }
+    }
 
     const logout = async () => {
         try {
