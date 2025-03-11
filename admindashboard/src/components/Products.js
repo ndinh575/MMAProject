@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Row, Col, Card, Table, Form, Button } from "react-bootstrap";
+import { Row, Col, Card, Table, Form, Button, Modal } from "react-bootstrap";
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -8,7 +8,8 @@ import { useProduct } from "@/context/ProductContext";
 
 const Products = () => {
     const router = useRouter();
-    const { products, loading } = useProduct();
+    const [showModal, setShowModal] = useState(false);
+    const { products, loading, deleteProduct, setCurrentProduct, currentProduct } = useProduct();
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("");
     const categories = [...new Set(products.map(p => p.category))];
@@ -20,6 +21,39 @@ const Products = () => {
         { month: "May", sales: 600, stock: 2181 },
         { month: "Jun", sales: 800, stock: 2500 },
     ];
+
+    const handleEdit = (product) => {
+        setCurrentProduct(product);
+        router.push("/productform");
+    };
+
+    const handlePreview = (product) => {
+        setCurrentProduct(product);
+        router.push("/productdetail");
+    }
+
+    const handleCreate = () => {
+        setCurrentProduct(null);
+        router.push("/productform");
+    }
+
+    const handleDeleteClick = (product) => {
+        setCurrentProduct(product);
+        setShowModal(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            if (currentProduct) {
+                await deleteProduct(currentProduct._id);
+                setShowModal(false);
+            } else {
+                throw new Error("Product not found");
+            }
+        } catch (error) {
+            console.error("Error deleting product:", error);
+        }
+    };
 
     if (loading) return <p>Loading products...</p>;
     return (
@@ -61,51 +95,68 @@ const Products = () => {
                     </Form.Select>
                 </Col>
                 <Col md={3}>
-                    <Button variant="primary" onClick={() => router.push("/addproduct")}>
+                    <Button variant="primary" onClick={handleCreate}>
                         <FaPlus /> Add Product
                     </Button>
                 </Col>
             </Row>
             <Row>
-            <Table responsive striped bordered hover>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Cost Price</th>
-                        <th>Selling Price</th>
-                        <th>Quantity</th>
-                        <th>Total Sales</th>
-                        <th>Profit</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products
-                        .filter((product) =>
-                            product.name.toLowerCase().includes(search.toLowerCase())
-                        )
-                        .filter((product) => (filter ? product.category === filter : true))
-                        .map((product, index) => (
-                            <tr key={product._id}>
-                                <td>{index + 1}</td>
-                                <td>{product.name}</td>
-                                <td>{product.cost_price + ' VND'}</td>
-                                <td>{product.selling_price + ' VND'}</td>
-                                <td>{product.stock_quantity}</td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <Button variant="primary me-3">Detail</Button>
-                                    <Button variant="warning me-3">Edit</Button>
-                                    <Button variant="danger me-3">Delete</Button>
-                                </td>
+                <Table responsive striped bordered hover>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
+                            <th>Quantity</th>
+                            <th>Total Sales</th>
+                            <th>Profit</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {products
+                            .filter((product) =>
+                                product.name.toLowerCase().includes(search.toLowerCase())
+                            )
+                            .filter((product) => (filter ? product.category === filter : true))
+                            .map((product, index) => (
+                                <tr key={product._id}>
+                                    <td>{index + 1}</td>
+                                    <td>{product.name}</td>
+                                    <td>{product.cost_price + ' VND'}</td>
+                                    <td>{product.selling_price + ' VND'}</td>
+                                    <td>{product.stock_quantity}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <Button variant="primary me-3" onClick={() => handlePreview(product)}>Detail</Button>
+                                        <Button variant="warning me-3" onClick={() => handleEdit(product)}>Edit</Button>
+                                        <Button variant="danger me-3" onClick={() => handleDeleteClick(product)}>Delete</Button>
+                                    </td>
 
-                            </tr>
-                        ))}
-                </tbody>
-            </Table>
+                                </tr>
+                            ))}
+                    </tbody>
+                </Table>
             </Row>
+            {/* Delete Confirmation Modal */}
+            <Modal show={showModal} onHide={() => setShowModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Deletion</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete <strong>{currentProduct?.name}</strong>?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

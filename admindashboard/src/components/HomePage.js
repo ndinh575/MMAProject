@@ -11,9 +11,9 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { useRouter } from "next/navigation";
 import { useCustomer } from "@/context/CustomerContext";
-
+import { useCommon } from "@/context/CommonContext";
 export default function HomePage() {
-    const [selectedItem, setSelectedItem] = useState("Dashboard");
+    const { selectedItem, setSelectedItem } = useCommon();
     const router = useRouter();
     const { verifyToken } = useCustomer();
 
