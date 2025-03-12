@@ -1,65 +1,46 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const { sendOTP, verifyOTP } = require('./OTPController');
+const { sendOTP } = require('./OTPController');
 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        const users = await User.find();
-
-        // Find the user by email
-        const user = users.find(u => u.email === email);
+        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(401).json({ message: 'Cannot find user email' });
         }
 
-        // Compare the password
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Create a JWT token
-        const token = jwt.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ message: 'Login successful', token: token });
+        const token = jwt.sign(
+            { id: user._id, name: user.name, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
-
+        res.status(200).json({ message: 'Login successful', token });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
-
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find().select("-password");
+        const users = await User.find().select('-password');
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: 'Server error', error });
     }
-}
+};
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role, phoneNumber, address, avatar, createdDate, dob, gender } = req.body;
-
-        // Create a new user
-        const user = new User({ 
-            name, 
-            email, 
-            password, 
-            role, 
-            phoneNumber, 
-            address, 
-            avatar, 
-            createdDate,
-            dob,
-            gender
-        });
+        const user = new User(req.body);
         await user.save();
-
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
         if (err.name === 'ValidationError') {
@@ -74,20 +55,25 @@ exports.register = async (req, res) => {
 
 exports.getUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select("-password");
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         res.json(user);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: 'Server error', error });
     }
-}
+};
+
 exports.getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select("-password");
-        if (!user) return res.status(404).json({ message: "User not found" });
-
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         res.json(user);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: 'Server error', error });
     }
 };
 
@@ -95,24 +81,21 @@ exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user._id;
         const updates = req.body;
-        const { dob, gender } = updates;
 
-        // Find existing user first
         const existingUser = await User.findById(userId);
         if (!existingUser) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Build update object with only changed fields
         const updateData = {};
-        if (updates.name && updates.name !== existingUser.name) updateData.name = updates.name;
-        if (updates.email && updates.email !== existingUser.email) updateData.email = updates.email;
-        if (updates.phoneNumber && updates.phoneNumber !== existingUser.phoneNumber) updateData.phoneNumber = updates.phoneNumber;
-        if (updates.avatar && updates.avatar !== existingUser.avatar) updateData.avatar = updates.avatar;
-        if (dob && new Date(dob).toString() !== new Date(existingUser.dob).toString()) updateData.dob = dob;
-        if (gender && gender !== existingUser.gender) updateData.gender = gender;
+        const fields = ['name', 'email', 'phoneNumber', 'avatar', 'dob', 'gender'];
+        
+        fields.forEach(field => {
+            if (updates[field] && updates[field] !== existingUser[field]) {
+                updateData[field] = updates[field];
+            }
+        });
 
-        // Handle address updates
         if (updates.address) {
             updateData.address = {
                 formattedAddress: updates.address.formattedAddress || existingUser.address?.formattedAddress,
@@ -122,7 +105,6 @@ exports.updateUserProfile = async (req, res) => {
             };
         }
 
-        // Only update if there are changes
         if (Object.keys(updateData).length === 0) {
             return res.json(existingUser);
         }
@@ -134,7 +116,6 @@ exports.updateUserProfile = async (req, res) => {
         ).select('-password');
 
         res.json(updatedUser);
-
     } catch (error) {
         if (error.name === 'ValidationError') {
             return res.status(400).json({
@@ -152,32 +133,30 @@ exports.updateUserProfile = async (req, res) => {
         
         res.status(500).json({ message: 'Error updating profile', error: error.message });
     }
-}
+};
 
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        res.json({ message: "User deleted successfully" });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: 'Server error', error });
     }
-}
+};
 
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        
-        // Check if user exists
         const user = await User.findOne({ email });
+        
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Generate and send OTP
         await sendOTP(req, res);
-
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -185,53 +164,55 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
     try {
-        const { email, otp, newPassword } = req.body;
+        const { email, password } = req.body;
 
-        // Verify OTP first
-        const otpVerification = await verifyOTP({ body: { email, otp } }, { 
-            status: (code) => ({
-                json: (data) => ({ code, data })
-            })
-        });
-
-        if (otpVerification.code !== 200) {
-            return res.status(400).json(otpVerification.data);
+        if (!email || !password) {
+            return res.status(400).json({ 
+                message: 'Email and new password are required'
+            });
         }
 
-        // Find user and update password
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Update password
-        user.password = newPassword;
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: 'Password must be at least 6 characters long'
+            });
+        }
+
+        user.password = password;
         await user.save();
 
-        res.json({ message: 'Password reset successfully' });
+        res.status(200).json({ 
+            success: true,
+            message: 'Password reset successfully' 
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Password reset error:', error);
+        res.status(500).json({ 
+            message: 'Failed to reset password',
+            error: error.message 
+        });
     }
 };
 
 exports.changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const userId = req.user._id;
-
-        // Find user
-        const user = await User.findById(userId);
+        const user = await User.findById(req.user._id);
+        
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Verify current password
         const isMatch = await user.comparePassword(currentPassword);
         if (!isMatch) {
             return res.status(400).json({ message: 'Current password is incorrect' });
         }
 
-        // Update password
         user.password = newPassword;
         await user.save();
 

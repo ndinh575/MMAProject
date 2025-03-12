@@ -28,7 +28,7 @@ const ProfileScreen = () => {
     logout();
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Login' }],
+      routes: [{ name: 'Auth' }],
     });
   };
 
@@ -37,6 +37,11 @@ const ProfileScreen = () => {
       icon: 'person-outline',
       title: 'Edit Profile',
       onPress: () => navigation.navigate('EditProfile'),
+    },
+    {
+      icon: 'lock-closed-outline',
+      title: 'Change Password',
+      onPress: () => navigation.navigate('ChangePassword'),
     },
     {
       icon: 'location-outline',

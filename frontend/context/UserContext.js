@@ -9,7 +9,6 @@ export const UserProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load user data when the app starts
         loadUserData();
     }, []);
 
@@ -33,7 +32,7 @@ export const UserProvider = ({ children }) => {
         try {
             setLoading(true);
             const response = await axios.post('http://192.168.137.1:9999/api/auth/login', { email, password });
-            const token = response.data.token;
+            const { token } = response.data;
 
             if (token) {
                 await AsyncStorage.setItem('token', token);
@@ -42,7 +41,7 @@ export const UserProvider = ({ children }) => {
             }
             return false;
         } catch (error) {
-            console.error('Login failed', error);
+            console.error('Login failed:', error);
             return false;
         } finally {
             setLoading(false);
@@ -66,14 +65,11 @@ export const UserProvider = ({ children }) => {
                 }
             );
 
-            setUser(prevUser => ({
-                ...prevUser,
-                ...response.data
-            }));
+            setUser(prevUser => ({ ...prevUser, ...response.data }));
             return true;
         } catch (error) {
             console.error('Error updating user:', error);
-            throw error; 
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -84,7 +80,7 @@ export const UserProvider = ({ children }) => {
             await AsyncStorage.removeItem('token');
             setUser(null);
         } catch (error) {
-            console.error('Error removing token:', error);
+            console.error('Error during logout:', error);
         }
     };
 
@@ -114,32 +110,70 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    const verifyOTP = async (email, otp) => {
+    const changePassword = async (currentPassword, newPassword) => {
         try {
             setLoading(true);
-            const response = await axios.post('http://192.168.137.1:9999/api/auth/verify-otp', { email, otp });
+            const token = await AsyncStorage.getItem('token');
+            if (!token) throw new Error('No authentication token');
+
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/change-password', {
+                currentPassword,
+                newPassword
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
             return response.data;
         } catch (error) {
-            console.error('Error verifying OTP:', error);
+            console.error('Error changing password:', error);
             throw error;
         } finally {
             setLoading(false);
         }
     };
-    
+
+    const resetPassword = async (email, otp, newPassword) => {
+        try {
+            setLoading(true);
+            const response = await axios.post(
+                'http://192.168.137.1:9999/api/auth/reset-password',
+                { 
+                    email,
+                    otp,
+                    password: newPassword
+                }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Reset password error:', error);
+            throw error.response || {
+                response: {
+                    status: 500,
+                    data: { message: error.message || 'An error occurred' }
+                }
+            };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <UserContext.Provider value={{
-            login,
-            logout,
             user,
-            updateUser,
             loading,
+            login,
+            logout, 
+            updateUser,
             refreshUser: loadUserData,
             createUser,
             sendOTP,
-            verifyOTP
+            resetPassword,
+            changePassword
         }}>
             {children}
         </UserContext.Provider>
     );
-}
+};

@@ -6,13 +6,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
-const LoginScreen = () => {
+const LoginScreen = ({ navigation }) => {
     const { login } = useContext(UserContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const navigation = useNavigation();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -23,15 +22,18 @@ const LoginScreen = () => {
         setLoading(true);
 
         try {
-            const response = await login(email, password);
-            if(response){
-                setError(null)
-                navigation.navigate('Home');
-            }else{
-                setError('Invalid credentials or server error');
+            const success = await login(email, password);
+            if (success) {
+                // Navigate to Main stack and reset navigation history
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Main' }],
+                });
+            } else {
+                setError('Invalid credentials');
             }
         } catch (error) {
-            setError('Invalid credentials or server error');
+            setError(error.response?.data?.message || 'Login failed');
         } finally {
             setLoading(false);
         }
@@ -53,6 +55,8 @@ const LoginScreen = () => {
                         value={email}
                         onChangeText={setEmail}
                         placeholderTextColor="#666"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
                     />
                 </View>
 
@@ -78,6 +82,13 @@ const LoginScreen = () => {
                     <Text style={styles.loginButtonText}>
                         {loading ? 'Logging in...' : 'Login'}
                     </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                    style={styles.forgotPasswordButton}
+                >
+                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                 </TouchableOpacity>
 
                 <View style={styles.registerContainer}>
@@ -180,6 +191,14 @@ const styles = StyleSheet.create({
         color: '#007bff',
         fontSize: 14,
         fontWeight: 'bold',
+    },
+    forgotPasswordButton: {
+        marginTop: 15,
+        alignItems: 'center',
+    },
+    forgotPasswordText: {
+        color: '#007bff',
+        fontSize: 14,
     },
 });
 
