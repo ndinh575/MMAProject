@@ -33,9 +33,32 @@ const UserSchema = new mongoose.Schema(
       unique: true,
       match: [/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"],
     },
-    address: {
+    dob: {
+      type: Date,
+      required: [true, "Date of birth is required"],
+    },
+    gender: {
       type: String,
-      trim: true,
+      required: [true, "Gender is required"],
+      enum: ["male", "female", "other"],
+    },
+    address: {
+      formattedAddress: {
+        type: String,
+        trim: true
+      },
+      subregion: {
+        type: String,
+        trim: true
+      },
+      region: {
+        type: String,
+        trim: true
+      },
+      country: {
+        type: String,
+        trim: true
+      }
     },
     avatar: {
       type: String, // Path to uploaded profile image

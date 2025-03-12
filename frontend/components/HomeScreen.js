@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import React, { useContext, useState, useCallback } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { ProductContext } from '../context/ProductContext';
@@ -8,8 +8,20 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const HomeScreen = () => {
   const { logout } = useContext(UserContext);
   const navigation = useNavigation();
-  const { products, loading } = useContext(ProductContext);
+  const { products, loading, fetchProducts } = useContext(ProductContext);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error refreshing products:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchProducts]);
 
   const handleLogout = () => {
     logout();
@@ -27,22 +39,20 @@ const HomeScreen = () => {
     navigation.navigate('Cart');
   };
 
-  if (loading) return null;
-
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card}>
       <Image source={{ uri: item.image_url }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.price}>{item.selling_price} VND</Text>
+          <Text style={[styles.name, { flex: 1 }]} numberOfLines={1}>{item.name}</Text>
         </View>
         <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
+        <Text style={styles.price}>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.selling_price)}</Text>
         <View style={styles.bottomRow}>
           <Text style={[styles.stock, item.stock_quantity < 5 ? styles.lowStock : null]}>
-            {item.stock_quantity === 0 ? 'Out of Stock' : 
-             item.stock_quantity < 5 ? `Only ${item.stock_quantity} left!` : 
-             `Stock: ${item.stock_quantity}`}
+            {item.stock_quantity === 0 ? 'Out of Stock' :
+              item.stock_quantity < 5 ? `Only ${item.stock_quantity} left!` :
+                `Stock: ${item.stock_quantity}`}
           </Text>
           <TouchableOpacity style={styles.addToCartButton}>
             <Icon name="add-circle-outline" size={24} color="#007bff" />
@@ -51,9 +61,9 @@ const HomeScreen = () => {
       </View>
     </TouchableOpacity>
   );
-  
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <View style={styles.header}>
         <View style={styles.searchContainer}>
           <Icon name="search" size={20} color="#666" style={styles.searchIcon} />
@@ -68,13 +78,28 @@ const HomeScreen = () => {
           <Icon name="cart" size={24} color="#007bff" />
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item._id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
+      
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007bff" />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#007bff']}
+              tintColor="#007bff"
+            />
+          }
+        />
+      )}
     </View>
   );
 };
@@ -82,7 +107,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 40,
     backgroundColor: "#f8f8f8",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,24 +8,49 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
+import MapView, { Marker } from 'react-native-maps';
+
+const { width, height } = Dimensions.get('window');
+const ASPECT_RATIO = width / height;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 const ShippingAddressScreen = () => {
   const navigation = useNavigation();
   const { user, updateUser, loading } = useContext(UserContext);
   const [address, setAddress] = useState({
-    street: user?.address?.street || '',
-    city: user?.address?.city || '',
-    state: user?.address?.state || '',
-    zipCode: user?.address?.zipCode || '',
+    formattedAddress: user?.address?.formattedAddress || '',
+    subregion: user?.address?.subregion || '',
+    region: user?.address?.region || '',
     country: user?.address?.country || '',
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [region, setRegion] = useState({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+  const [hasLocationPermission, setHasLocationPermission] = useState(false);
+
+  useEffect(() => {
+    checkLocationPermission();
+  }, []);
+
+  const checkLocationPermission = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    setHasLocationPermission(status === 'granted');
+    if (status === 'granted') {
+      getCurrentLocation();
+    }
+  };
 
   const handleUpdateAddress = async () => {
     try {
@@ -40,17 +65,65 @@ const ShippingAddressScreen = () => {
   const getCurrentLocation = async () => {
     try {
       setIsLoadingLocation(true);
-      const { status } = await Location.requestForegroundPermissionsAsync();
       
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to get your address');
-        return;
+      if (!hasLocationPermission) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'Location permission is required to get your address');
+          return;
+        }
+        setHasLocationPermission(true);
       }
 
-      const location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
+      });
       const { latitude, longitude } = location.coords;
       
-      // Get address from coordinates using reverse geocoding
+      setRegion({
+        latitude,
+        longitude,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      });
+
+      // Get detailed address from coordinates using reverse geocoding
+      const [reverseGeocode] = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+
+      if (reverseGeocode) {
+        console.log('Geocoding result:', reverseGeocode);
+        
+        setAddress(prev => ({
+          ...prev,
+          formattedAddress: reverseGeocode.formattedAddress || '',
+          subregion: reverseGeocode.subregion || '',
+          region: reverseGeocode.region || '',
+          country: reverseGeocode.country || '',
+        }));
+        setIsEditing(true);
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      Alert.alert('Error', 'Failed to get current location');
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const handleMapPress = async (event) => {
+    if (!isEditing) return;
+    
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setRegion({
+      ...region,
+      latitude,
+      longitude,
+    });
+
+    try {
       const [reverseGeocode] = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
@@ -59,23 +132,19 @@ const ShippingAddressScreen = () => {
       if (reverseGeocode) {
         setAddress(prev => ({
           ...prev,
-          street: reverseGeocode.street || '',
-          city: reverseGeocode.city || '',
-          state: reverseGeocode.region || '',
-          zipCode: reverseGeocode.postalCode || '',
+          formattedAddress: reverseGeocode.formattedAddress || '',
+          subregion: reverseGeocode.subregion || '',
+          region: reverseGeocode.region || '',
           country: reverseGeocode.country || '',
         }));
-        setIsEditing(true);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to get current location');
-    } finally {
-      setIsLoadingLocation(false);
+      Alert.alert('Error', 'Failed to get address from selected location');
     }
   };
 
   const handleSave = () => {
-    if (!address.street || !address.city || !address.state || !address.zipCode) {
+    if (!address.formattedAddress || !address.region || !address.country) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -103,6 +172,25 @@ const ShippingAddressScreen = () => {
       </View>
 
       <View style={styles.content}>
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            region={region}
+            onPress={handleMapPress}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            <Marker
+              coordinate={{
+                latitude: region.latitude,
+                longitude: region.longitude,
+              }}
+              draggable={isEditing}
+              onDragEnd={handleMapPress}
+            />
+          </MapView>
+        </View>
+
         <TouchableOpacity 
           style={styles.locationButton}
           onPress={getCurrentLocation}
@@ -115,47 +203,36 @@ const ShippingAddressScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Street Address</Text>
+          <Text style={styles.label}>Address</Text>
           <TextInput
             style={styles.input}
-            value={address.street}
-            onChangeText={(text) => setAddress(prev => ({ ...prev, street: text }))}
-            placeholder="Enter street address"
+            value={address.formattedAddress}
+            onChangeText={(text) => setAddress(prev => ({ ...prev, formattedAddress: text }))}
+            placeholder="Enter address"
+            editable={isEditing}
+            multiline
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Subregion</Text>
+          <TextInput
+            style={styles.input}
+            value={address.subregion}
+            onChangeText={(text) => setAddress(prev => ({ ...prev, subregion: text }))}
+            placeholder="Enter subregion"
             editable={isEditing}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>City</Text>
+          <Text style={styles.label}>Region</Text>
           <TextInput
             style={styles.input}
-            value={address.city}
-            onChangeText={(text) => setAddress(prev => ({ ...prev, city: text }))}
-            placeholder="Enter city"
+            value={address.region}
+            onChangeText={(text) => setAddress(prev => ({ ...prev, region: text }))}
+            placeholder="Enter region"
             editable={isEditing}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>State/Province</Text>
-          <TextInput
-            style={styles.input}
-            value={address.state}
-            onChangeText={(text) => setAddress(prev => ({ ...prev, state: text }))}
-            placeholder="Enter state/province"
-            editable={isEditing}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>ZIP/Postal Code</Text>
-          <TextInput
-            style={styles.input}
-            value={address.zipCode}
-            onChangeText={(text) => setAddress(prev => ({ ...prev, zipCode: text }))}
-            placeholder="Enter ZIP/postal code"
-            editable={isEditing}
-            keyboardType="numeric"
           />
         </View>
 
@@ -192,6 +269,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f8f8',
+  },
+  mapContainer: {
+    height: 300,
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   header: {
     flexDirection: 'row',

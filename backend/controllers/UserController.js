@@ -42,14 +42,31 @@ exports.getAllUsers = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
-        const { name, email, password, role, phoneNumber, address, avatar, createdDate } = req.body;
+        const { name, email, password, role, phoneNumber, address, avatar, createdDate, dob, gender } = req.body;
 
         // Create a new user
-        const user = new User({ name, email, password, role, phoneNumber, address, avatar, createdDate });
+        const user = new User({ 
+            name, 
+            email, 
+            password, 
+            role, 
+            phoneNumber, 
+            address, 
+            avatar, 
+            createdDate,
+            dob,
+            gender
+        });
         await user.save();
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: Object.values(err.errors).map(e => e.message)
+            });
+        }
         res.status(500).json({ message: err.message });
     }
 };
@@ -76,35 +93,59 @@ exports.getUserProfile = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { name, email, phoneNumber, avatar } = req.body;
-        const updateData = { name };
+        const updates = req.body;
+        const { dob, gender } = updates;
 
-        // Only update email and phone if provided and different from current
-        if (email) updateData.email = email;
-        if (phoneNumber) updateData.phoneNumber = phoneNumber;
-        
-        // Handle base64 avatar if present
-        if (avatar) {
-            updateData.avatar = avatar;
+        // Find existing user first
+        const existingUser = await User.findById(userId);
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        const user = await User.findByIdAndUpdate(
+        // Build update object with only changed fields
+        const updateData = {};
+        if (updates.name && updates.name !== existingUser.name) updateData.name = updates.name;
+        if (updates.email && updates.email !== existingUser.email) updateData.email = updates.email;
+        if (updates.phoneNumber && updates.phoneNumber !== existingUser.phoneNumber) updateData.phoneNumber = updates.phoneNumber;
+        if (updates.avatar && updates.avatar !== existingUser.avatar) updateData.avatar = updates.avatar;
+        if (dob && new Date(dob).toString() !== new Date(existingUser.dob).toString()) updateData.dob = dob;
+        if (gender && gender !== existingUser.gender) updateData.gender = gender;
+
+        // Handle address updates
+        if (updates.address) {
+            updateData.address = {
+                formattedAddress: updates.address.formattedAddress || existingUser.address?.formattedAddress,
+                subregion: updates.address.subregion || existingUser.address?.subregion,
+                region: updates.address.region || existingUser.address?.region,
+                country: updates.address.country || existingUser.address?.country
+            };
+        }
+
+        // Only update if there are changes
+        if (Object.keys(updateData).length === 0) {
+            return res.json(existingUser);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $set: updateData },
             { new: true, runValidators: true }
         ).select('-password');
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        res.json(updatedUser);
+
+    } catch (error) {
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: Object.values(error.errors).map(err => err.message)
+            });
         }
 
-        res.json(user);
-    } catch (error) {
-        // Handle validation errors
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ 
-                message: 'Validation error', 
-                errors: Object.values(error.errors).map(err => err.message)
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: 'Duplicate field value entered',
+                field: Object.keys(error.keyPattern)[0]
             });
         }
         

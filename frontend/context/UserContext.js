@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.get('http://localhost:9999/api/auth/me', {
+                const response = await axios.get('http://192.168.137.1:9999/api/auth/me', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUser(response.data);
@@ -32,7 +32,7 @@ export const UserProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             setLoading(true);
-            const response = await axios.post('http://localhost:9999/api/auth/login', { email, password });
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/login', { email, password });
             const token = response.data.token;
 
             if (token) {
@@ -56,7 +56,7 @@ export const UserProvider = ({ children }) => {
             if (!token) throw new Error('No authentication token');
 
             const response = await axios.put(
-                'http://localhost:9999/api/auth/update-profile',
+                'http://192.168.137.1:9999/api/auth/update-profile',
                 userData,
                 {
                     headers: {

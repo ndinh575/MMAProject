@@ -11,7 +11,7 @@ export const ProductProvider = ({ children }) => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get("http://localhost:9999/api/products");
+            const response = await axios.get("http://192.168.137.1:9999/api/products");
             setProducts(response.data);
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -25,7 +25,7 @@ export const ProductProvider = ({ children }) => {
     }, []);
 
     return (
-        <ProductContext.Provider value={{ products, loading, currentProduct, setCurrentProduct }}>
+        <ProductContext.Provider value={{ products, loading, currentProduct, setCurrentProduct, fetchProducts }}>
             {children}
         </ProductContext.Provider>
     );
