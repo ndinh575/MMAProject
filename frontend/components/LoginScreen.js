@@ -79,6 +79,16 @@ const LoginScreen = () => {
                         {loading ? 'Logging in...' : 'Login'}
                     </Text>
                 </TouchableOpacity>
+
+                <View style={styles.registerContainer}>
+                    <Text style={styles.registerText}>Don't have an account?</Text>
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate('Register')}
+                        style={styles.registerButton}
+                    >
+                        <Text style={styles.registerButtonText}>Register</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -151,13 +161,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    forgotPassword: {
-        marginTop: 15,
+    registerContainer: {
+        marginTop: 20,
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    forgotPasswordText: {
+    registerText: {
+        color: '#666',
+        fontSize: 14,
+        marginRight: 5,
+    },
+    registerButton: {
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+    },
+    registerButtonText: {
         color: '#007bff',
         fontSize: 14,
+        fontWeight: 'bold',
     },
 });
 

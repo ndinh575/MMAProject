@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet } from 'react-native';
 import { UserProvider } from './context/UserContext';
 import LoginScreen from './components/LoginScreen';
+import RegisterScreen from './components/RegisterScreen';
 import { ProductProvider } from './context/ProductContext';
 import BottomTabNavigator from './navigation/BottomTabNavigator';
 import EditProfileScreen from './components/EditProfileScreen';
@@ -20,6 +21,13 @@ export default function App() {
             <Stack.Screen 
               name="Login" 
               component={LoginScreen}
+              options={{
+                headerShown: false
+              }}
+            />
+            <Stack.Screen 
+              name="Register" 
+              component={RegisterScreen}
               options={{
                 headerShown: false
               }}

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/UserController');
+const OTPController = require('../controllers/OTPController');
 const verifyToken = require('../middleware/authMiddleware');
 const verifyAdmin = require('../middleware/verifyAdmin');
 
@@ -17,4 +18,9 @@ router.route('/verify-token').get(verifyToken, verifyAdmin, (req, res) => res.js
 router.route('/users/:id')
     .get(verifyToken, UserController.getUser)
     .delete(verifyToken, verifyAdmin, UserController.deleteUser);
+
+// OTP Routes
+router.post('/send-otp', OTPController.sendOTP);
+router.post('/verify-otp', OTPController.verifyOTP);
+
 module.exports = router;

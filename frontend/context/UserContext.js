@@ -88,6 +88,45 @@ export const UserProvider = ({ children }) => {
         }
     };
 
+    const createUser = async (userData) => {
+        try {
+            setLoading(true);
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/register', userData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating user:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const sendOTP = async (email) => {
+        try {
+            setLoading(true);
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/send-otp', { email });
+            return response.data;
+        } catch (error) {
+            console.error('Error sending OTP:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyOTP = async (email, otp) => {
+        try {
+            setLoading(true);
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/verify-otp', { email, otp });
+            return response.data;
+        } catch (error) {
+            console.error('Error verifying OTP:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+    
     return (
         <UserContext.Provider value={{
             login,
@@ -95,7 +134,10 @@ export const UserProvider = ({ children }) => {
             user,
             updateUser,
             loading,
-            refreshUser: loadUserData
+            refreshUser: loadUserData,
+            createUser,
+            sendOTP,
+            verifyOTP
         }}>
             {children}
         </UserContext.Provider>

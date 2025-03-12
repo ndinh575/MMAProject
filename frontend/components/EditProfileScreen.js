@@ -9,108 +9,13 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Platform,
-  Modal,
 } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
-
-const CustomDatePicker = ({ isVisible, date, onConfirm, onCancel }) => {
-  const [selectedDate, setSelectedDate] = useState(date);
-  
-  const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const days = Array.from(
-    { length: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate() },
-    (_, i) => i + 1
-  );
-
-  return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="slide"
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.pickerContainer}>
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Year</Text>
-              <ScrollView>
-                {years.map(year => (
-                  <TouchableOpacity
-                    key={year}
-                    style={[
-                      styles.pickerItem,
-                      year === selectedDate.getFullYear() && styles.selectedItem
-                    ]}
-                    onPress={() => setSelectedDate(new Date(year, selectedDate.getMonth(), selectedDate.getDate()))}
-                  >
-                    <Text style={[
-                      styles.pickerItemText,
-                      year === selectedDate.getFullYear() && styles.selectedItemText
-                    ]}>{year}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Month</Text>
-              <ScrollView>
-                {months.map(month => (
-                  <TouchableOpacity
-                    key={month}
-                    style={[
-                      styles.pickerItem,
-                      month === selectedDate.getMonth() + 1 && styles.selectedItem
-                    ]}
-                    onPress={() => setSelectedDate(new Date(selectedDate.getFullYear(), month - 1, selectedDate.getDate()))}
-                  >
-                    <Text style={[
-                      styles.pickerItemText,
-                      month === selectedDate.getMonth() + 1 && styles.selectedItemText
-                    ]}>{month}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-            <View style={styles.pickerColumn}>
-              <Text style={styles.pickerLabel}>Day</Text>
-              <ScrollView>
-                {days.map(day => (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.pickerItem,
-                      day === selectedDate.getDate() && styles.selectedItem
-                    ]}
-                    onPress={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day))}
-                  >
-                    <Text style={[
-                      styles.pickerItemText,
-                      day === selectedDate.getDate() && styles.selectedItemText
-                    ]}>{day}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-          <View style={styles.modalButtons}>
-            <TouchableOpacity style={styles.modalButton} onPress={() => onCancel()}>
-              <Text style={styles.modalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.modalButton, styles.confirmButton]} onPress={() => onConfirm(selectedDate)}>
-              <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Confirm</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+import CustomDatePicker from './CustomDatePicker';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -128,9 +33,9 @@ const EditProfileScreen = () => {
 
   const handleImagePick = async () => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
-      if (!permissionResult.granted) {
+      if (!granted) {
         Alert.alert('Permission Required', 'Please allow access to your photo library to change profile picture.');
         return;
       }
@@ -144,10 +49,9 @@ const EditProfileScreen = () => {
       });
 
       if (!result.canceled) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
         setFormData(prev => ({
           ...prev,
-          avatar: base64Image
+          avatar: `data:image/jpeg;base64,${result.assets[0].base64}`
         }));
       }
     } catch (error) {
@@ -174,90 +78,87 @@ const EditProfileScreen = () => {
   };
 
   const handleDateConfirm = (date) => {
-    setFormData(prev => ({
-      ...prev,
-      dob: date
-    }));
+    setFormData(prev => ({ ...prev, dob: date }));
     setShowDatePicker(false);
   };
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'long', 
       day: 'numeric'
     });
   };
 
+  const renderAvatar = () => (
+    formData.avatar ? (
+      <Image source={{ uri: formData.avatar }} style={styles.avatar} />
+    ) : (
+      <View style={[styles.avatar, styles.defaultAvatar]}>
+        <Icon name="person" size={40} color="#ffffff" />
+      </View>
+    )
+  );
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="arrow-back" size={24} color="#333" />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Edit Profile</Text>
+      <TouchableOpacity 
+        style={styles.saveButton}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#007bff" />
+        ) : (
+          <Text style={styles.saveButtonText}>Save</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderFormField = (label, value, onChange, options = {}) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        style={[styles.input, options.disabled && styles.disabledInput]}
+        value={value}
+        onChangeText={onChange}
+        editable={!options.disabled}
+        placeholder={options.placeholder}
+        keyboardType={options.keyboardType}
+      />
+    </View>
+  );
+
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-        <TouchableOpacity 
-          style={styles.saveButton}
-          onPress={handleSave}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#007bff" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      {renderHeader()}
 
       <View style={styles.content}>
         <TouchableOpacity style={styles.avatarContainer} onPress={handleImagePick}>
-          {formData.avatar ? (
-            <Image
-              source={{ uri: formData.avatar }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={[styles.avatar, styles.defaultAvatar]}>
-              <Icon name="person" size={40} color="#ffffff" />
-            </View>
-          )}
+          {renderAvatar()}
           <View style={styles.editIconContainer}>
             <Icon name="camera" size={20} color="#fff" />
           </View>
         </TouchableOpacity>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.name}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
-            placeholder="Enter your name"
-          />
-        </View>
+        {renderFormField('Name', formData.name, 
+          (text) => setFormData(prev => ({ ...prev, name: text })),
+          { placeholder: 'Enter your name' }
+        )}
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, styles.disabledInput]}
-            value={formData.email}
-            editable={false}
-          />
-        </View>
+        {renderFormField('Email', formData.email, null, { disabled: true })}
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Phone Number</Text>
-          <TextInput
-            style={[styles.input, styles.disabledInput]}
-            value={formData.phoneNumber}
-            editable={false}
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-          />
-        </View>
+        {renderFormField('Phone Number', formData.phoneNumber, null, 
+          { disabled: true, placeholder: 'Enter your phone number', keyboardType: 'phone-pad' }
+        )}
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date of Birth</Text>
@@ -303,7 +204,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center', 
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 12,
@@ -392,7 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  pickerContainer: {
+  genderPickerContainer: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ddd',
@@ -402,79 +303,6 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  pickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    height: 200,
-  },
-  pickerColumn: {
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  pickerLabel: {
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  pickerItem: {
-    padding: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  selectedItem: {
-    backgroundColor: '#007bff',
-  },
-  pickerItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  selectedItemText: {
-    color: '#fff',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  modalButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    marginHorizontal: 5,
-    backgroundColor: '#f0f0f0',
-  },
-  confirmButton: {
-    backgroundColor: '#007bff',
-  },
-  modalButtonText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#333',
-  },
-  confirmButtonText: {
-    color: '#fff',
-  },
-  genderPickerContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
 });
 
-export default EditProfileScreen; 
+export default EditProfileScreen;
