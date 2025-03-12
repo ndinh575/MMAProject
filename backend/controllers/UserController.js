@@ -54,9 +54,17 @@ exports.register = async (req, res) => {
     }
 };
 
-exports.getUserProfile = async (req, res) => {
+exports.getUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password");
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+}
+exports.getUserProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("-password");
         if (!user) return res.status(404).json({ message: "User not found" });
 
         res.json(user);
@@ -65,17 +73,42 @@ exports.getUserProfile = async (req, res) => {
     }
 };
 
-exports.updateUser = async (req, res) => {
+exports.updateUserProfile = async (req, res) => {
     try {
-        const { name, email, phoneNumber, role } = req.body;
+        const userId = req.user._id;
+        const { name, email, phoneNumber, avatar } = req.body;
+        const updateData = { name };
 
-        const user = await User.findByIdAndUpdate(req.params.id, { name, email, phoneNumber, role }, { new: true }).select("-password");
+        // Only update email and phone if provided and different from current
+        if (email) updateData.email = email;
+        if (phoneNumber) updateData.phoneNumber = phoneNumber;
+        
+        // Handle base64 avatar if present
+        if (avatar) {
+            updateData.avatar = avatar;
+        }
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).select('-password');
 
-        res.json({ message: "User updated successfully", user });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(user);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                message: 'Validation error', 
+                errors: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        
+        res.status(500).json({ message: 'Error updating profile', error: error.message });
     }
 }
 

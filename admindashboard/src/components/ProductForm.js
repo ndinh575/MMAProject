@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useProduct } from "@/context/ProductContext";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import { useCustomer } from "@/context/CustomerContext";
 import { useRouter } from "next/navigation";
 const ProductForm = () => {
     const router = useRouter();
+    const { verifyToken } = useCustomer();
     const { addProduct, currentProduct, setCurrentProduct, updateProduct } = useProduct();
+    const [loading, setLoading] = useState(true);
     const [product, setProduct] = useState({
         name: "",
         description: "",
@@ -16,7 +19,17 @@ const ProductForm = () => {
         category: ""
     });
 
+    const checkAuth = async () => {
+        const verifiedUser = await verifyToken();
+        if (!verifiedUser) {
+            router.push("/login"); // Redirect to login if not authenticated
+        } else {
+            setLoading(false); // Allow rendering only when authenticated
+        }
+    };
+
     useEffect(() => {
+        checkAuth();
         if (currentProduct) {
             setProduct(currentProduct);
         }
@@ -58,6 +71,8 @@ const ProductForm = () => {
             console.error("Error saving product:", error);
         }
     };
+
+    if (loading) return null;
 
     return (
         <Container className="mt-5">
