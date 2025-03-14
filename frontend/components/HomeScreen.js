@@ -3,12 +3,14 @@ import { View, Text, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, R
 import { UserContext } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { ProductContext } from '../context/ProductContext';
+import { CartContext } from '../context/CartContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const HomeScreen = () => {
   const { logout } = useContext(UserContext);
   const navigation = useNavigation();
   const { products, loading, fetchProducts } = useContext(ProductContext);
+  const { addToCart, getCartItemCount } = useContext(CartContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -39,6 +41,12 @@ const HomeScreen = () => {
     navigation.navigate('Cart');
   };
 
+  const handleAddToCart = (product) => {
+    if (product.stock_quantity > 0) {
+      addToCart(product);
+    }
+  };
+
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.card}>
       <Image source={{ uri: item.image_url }} style={styles.image} />
@@ -54,8 +62,12 @@ const HomeScreen = () => {
               item.stock_quantity < 5 ? `Only ${item.stock_quantity} left!` :
                 `Stock: ${item.stock_quantity}`}
           </Text>
-          <TouchableOpacity style={styles.addToCartButton}>
-            <Icon name="add-circle-outline" size={24} color="#007bff" />
+          <TouchableOpacity 
+            style={[styles.addToCartButton, item.stock_quantity === 0 && styles.disabledButton]}
+            onPress={() => handleAddToCart(item)}
+            disabled={item.stock_quantity === 0}
+          >
+            <Icon name="add-circle-outline" size={24} color={item.stock_quantity === 0 ? "#ccc" : "#007bff"} />
           </TouchableOpacity>
         </View>
       </View>
@@ -76,6 +88,11 @@ const HomeScreen = () => {
         </View>
         <TouchableOpacity style={styles.cartButton} onPress={handleCartPress}>
           <Icon name="cart" size={24} color="#007bff" />
+          {getCartItemCount() > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
       
@@ -142,6 +159,24 @@ const styles = StyleSheet.create({
   },
   cartButton: {
     padding: 8,
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    backgroundColor: '#ff3b30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    paddingHorizontal: 4,
   },
   listContainer: {
     padding: 15,
@@ -205,6 +240,9 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     padding: 5,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 

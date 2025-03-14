@@ -8,6 +8,10 @@ const ProductSchema = new mongoose.Schema({
     stock_quantity: { type: Number, required: true },
     image_url: { type: String }, 
     category: { type: String, required: true },
+    expiry: { type: String },
+    origin: { type: String },
+    sendFrom: { type: String },
+    weight: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 

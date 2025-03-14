@@ -1,165 +1,232 @@
 "use client";
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Table, Pagination, Form, Button } from "react-bootstrap";
-import { Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, AreaChart, Area } from "recharts";
+import { Container, Row, Col, Card, Table, Pagination, Form, Button, Modal } from "react-bootstrap";
+import { Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useCustomer } from "@/context/CustomerContext";
 
-const data = [
-    { month: "Jan", retained: 90, churned: 10 },
-    { month: "Feb", retained: 85, churned: 15 },
-    { month: "Mar", retained: 80, churned: 20 },
-    { month: "Apr", retained: 78, churned: 22 },
-    { month: "May", retained: 75, churned: 25 },
-    { month: "Jun", retained: 72, churned: 28 },
-];
+// Constants
+const CHART_HEIGHT = 300;
+const CUSTOMERS_PER_PAGE_OPTIONS = [5, 10, 15, 20];
 
-const ordersData = [
+const ORDERS_DATA = [
     { month: "Jan", orders: 120 },
     { month: "Feb", orders: 150 },
     { month: "Mar", orders: 180 },
     { month: "Apr", orders: 200 },
     { month: "May", orders: 220 },
+    { month: "Jun", orders: 240 },
+    { month: "Jul", orders: 260 },
+    { month: "Aug", orders: 280 },
+    { month: "Sep", orders: 300 },
+    { month: "Oct", orders: 320 },
+    { month: "Nov", orders: 340 },
+    { month: "Dec", orders: 360 },
 ];
 
-export default function Customers() {
+// Utility functions
+const formatDate = (createdDate) => {
+    const date = new Date(createdDate);
+    return date.toISOString().split('T')[0];
+};
 
-    const { customers, loading } = useCustomer();
-
-    if (loading) return <p>Loading customers...</p>;
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const [customersPerPage, setCustomersPerPage] = useState(5);
+const calculatePagination = (customers, currentPage, customersPerPage) => {
     const indexOfLastCustomer = currentPage * customersPerPage;
     const indexOfFirstCustomer = indexOfLastCustomer - customersPerPage;
     const currentCustomers = customers.slice(indexOfFirstCustomer, indexOfLastCustomer);
-
     const totalPages = Math.ceil(customers.length / customersPerPage);
 
-    const handeDate = (createdDate) => {
-        const date = new Date(createdDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0"); // Ensure 2-digit month
-        const day = String(date.getDate()).padStart(2, "0"); // Ensure 2-digit day
-        return `${year}-${month}-${day}`;
-    }
+    return { currentCustomers, totalPages };
+};
 
+// Chart Components
+const CustomerOrdersChart = () => (
+    <Card className="p-3 shadow-sm">
+        <h5>Customer Orders & Activity</h5>
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <BarChart data={ORDERS_DATA}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="orders" fill="#007bff" />
+            </BarChart>
+        </ResponsiveContainer>
+    </Card>
+);
+
+// Table Components
+const CustomerTableHeader = () => (
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Address</th>
+            <th>Date of Birth</th>
+            <th>Gender</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+);
+
+const CustomerTableRow = ({ customer, index, onShowDetail }) => (
+    <tr>
+        <td>{index + 1}</td>
+        <td>{customer.name}</td>
+        <td>{customer.email}</td>
+        <td>{customer.phoneNumber}</td>
+        <td>{customer.address.region}</td>
+        <td>{formatDate(customer.dob)}</td>
+        <td>{customer.gender}</td>
+        <td><Button variant="primary" onClick={() => onShowDetail(customer)}>Detail</Button></td>
+        <td><Button variant="danger">Delete</Button></td>
+    </tr>
+);
+
+const CustomerDetailModal = ({ show, onHide, customer }) => (
+    <Modal show={show} onHide={onHide} size="lg">
+        <Modal.Header closeButton>
+            <Modal.Title>Customer Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+            {customer && (
+                <div>
+                    <Row>
+                        <Col md={4}>
+                            <img 
+                                src={customer.avatar} 
+                                alt={customer.name}
+                                style={{ width: '100%', height: 'auto', borderRadius: '50%' }}
+                            />
+                        </Col>
+                        <Col md={8}>
+                            <h4>{customer.name}</h4>
+                            <p><strong>Email:</strong> {customer.email}</p>
+                            <p><strong>Phone:</strong> {customer.phoneNumber}</p>
+                            <p><strong>Gender:</strong> {customer.gender}</p>
+                            <p><strong>Date of Birth:</strong> {formatDate(customer.dob)}</p>
+                            <p><strong>Address:</strong></p>
+                            <ul>
+                                <li>Region: {customer.address.region}</li>
+                                <li>Subregion: {customer.address.subregion}</li>
+                                <li>Country: {customer.address.country}</li>
+                                <li>Full Address: {customer.address.formattedAddress}</li>
+                            </ul>
+                            <p><strong>Member Since:</strong> {formatDate(customer.createdDate)}</p>
+                        </Col>
+                    </Row>
+                </div>
+            )}
+        </Modal.Body>
+    </Modal>
+);
+
+const CustomerTable = ({ customers, customersPerPage, setCustomersPerPage, currentPage, setCurrentPage }) => {
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const { currentCustomers, totalPages } = calculatePagination(customers, currentPage, customersPerPage);
+
+    const handleShowDetail = (customer) => {
+        setSelectedCustomer(customer);
+        setShowDetailModal(true);
+    };
+
+    return (
+        <Card className="shadow-sm p-3">
+            <Card.Title>Customer List</Card.Title>
+            <Form.Group className="mb-3">
+                <Row>
+                    <Col md={1}>
+                        <Form.Label>Customer per page:</Form.Label>
+                    </Col>
+                    <Col md={1}>
+                        <Form.Select
+                            value={customersPerPage}
+                            onChange={(e) => {
+                                setCustomersPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                        >
+                            {CUSTOMERS_PER_PAGE_OPTIONS.map(num => (
+                                <option key={num} value={num}>{num}</option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+                </Row>
+            </Form.Group>
+
+            <Table striped bordered hover responsive>
+                <CustomerTableHeader />
+                <tbody>
+                    {currentCustomers.map((customer, index) => (
+                        <CustomerTableRow 
+                            key={customer._id} 
+                            customer={customer} 
+                            index={index}
+                            onShowDetail={handleShowDetail}
+                        />
+                    ))}
+                </tbody>
+            </Table>
+
+            <Pagination className="justify-content-center">
+                <Pagination.Prev
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                />
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <Pagination.Item
+                        key={i + 1}
+                        active={i + 1 === currentPage}
+                        onClick={() => setCurrentPage(i + 1)}
+                    >
+                        {i + 1}
+                    </Pagination.Item>
+                ))}
+                <Pagination.Next
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                />
+            </Pagination>
+
+            <CustomerDetailModal 
+                show={showDetailModal}
+                onHide={() => setShowDetailModal(false)}
+                customer={selectedCustomer}
+            />
+        </Card>
+    );
+};
+
+const Customers = () => {
+    const { customers, loading } = useCustomer();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [customersPerPage, setCustomersPerPage] = useState(CUSTOMERS_PER_PAGE_OPTIONS[0]);
+
+    if (loading) return <p>Loading customers...</p>;
 
     return (
         <Container fluid className="mt-4">
             <h4 className="mb-4">Customer Dashboard</h4>
 
-            {/* Charts Section */}
             <Row>
-                {/* Customer Orders (Bar Chart) */}
-                <Col md={6}>
-                    <Card className="p-3 shadow-sm">
-                        <h5>Customer Orders & Activity</h5>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={ordersData}>
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="orders" fill="#007bff" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-                </Col>
-
-                <Col md={6}>
-                    <Card className="shadow-sm p-3">
-                        <h5 className="text-center mb-3">Customer Retention & Churn</h5>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={data}>
-                                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Area type="monotone" dataKey="retained" fill="#4CAF50" stroke="#388E3C" name="Retained Customers" />
-                                <Area type="monotone" dataKey="churned" fill="#F44336" stroke="#D32F2F" name="Churned Customers" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
+                <Col>
+                    <CustomerOrdersChart />
                 </Col>
             </Row>
 
-            {/* Customer Table */}
             <Row className="mt-4">
-                <Card className="shadow-sm p-3">
-                    <Card.Title>Customer List</Card.Title>
-
-                    <Form.Group className="mb-3">
-                        <Row>
-                            <Col md={1}>
-                                <Form.Label>Customer per page:</Form.Label>
-                            </Col>
-                            <Col md={1}>
-                                <Form.Select
-                                    value={customersPerPage}
-                                    onChange={(e) => {
-                                        setCustomersPerPage(Number(e.target.value));
-                                        setCurrentPage(1); // Reset to first page
-                                    }}
-                                >
-                                    <option value={5}>5</option>
-                                    <option value={10}>10</option>
-                                    <option value={15}>15</option>
-                                    <option value={20}>20</option>
-                                </Form.Select>
-                            </Col>
-                        </Row>
-
-
-                    </Form.Group>
-                    <Table striped bordered hover responsive>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Address</th>
-                                <th>Created Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {currentCustomers.map((customer, index) => (
-                                <tr key={index}>
-                                    <td>{customer.id}</td>
-                                    <td>{customer.name}</td>
-                                    <td>{customer.email}</td>
-                                    <td>{customer.phoneNumber}</td>
-                                    <td>{customer.address}</td>
-                                    <td>{handeDate(customer.createdDate)}</td>
-                                    <td><Button variant="primary">Detail</Button></td>
-                                    <td><Button variant="danger">Delete</Button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-
-
-                    {/* Pagination */}
-                    <Pagination className="justify-content-center">
-                        <Pagination.Prev
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                        />
-                        {Array.from({ length: totalPages }, (_, i) => (
-                            <Pagination.Item
-                                key={i + 1}
-                                active={i + 1 === currentPage}
-                                onClick={() => setCurrentPage(i + 1)}
-                            >
-                                {i + 1}
-                            </Pagination.Item>
-                        ))}
-                        <Pagination.Next
-                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        />
-                    </Pagination>
-                </Card>
+                <CustomerTable
+                    customers={customers}
+                    customersPerPage={customersPerPage}
+                    setCustomersPerPage={setCustomersPerPage}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
+                />
             </Row>
         </Container>
     );
-}
+};
+
+export default Customers;

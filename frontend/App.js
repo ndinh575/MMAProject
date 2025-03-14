@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet } from 'react-native';
 import { UserProvider } from './context/UserContext';
 import { ProductProvider } from './context/ProductContext';
-
+import { CartProvider } from './context/CartContext';
 // Auth Screens
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
@@ -15,6 +15,7 @@ import BottomTabNavigator from './navigation/BottomTabNavigator';
 import EditProfileScreen from './components/EditProfileScreen';
 import ShippingAddressScreen from './components/ShippingAddressScreen';
 import ChangePasswordScreen from './components/ChangePasswordScreen';
+import CartScreen from './components/CartScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ const MainStack = () => (
     <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     <Stack.Screen name="ShippingAddress" component={ShippingAddressScreen} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+    <Stack.Screen name="Cart" component={CartScreen} />
   </Stack.Navigator>
 );
 
@@ -41,6 +43,7 @@ export default function App() {
   return (
     <UserProvider>
       <ProductProvider>
+        <CartProvider>
         <NavigationContainer>
           <Stack.Navigator 
             screenOptions={{ headerShown: false }}
@@ -50,6 +53,7 @@ export default function App() {
             <Stack.Screen name="Main" component={MainStack} />
           </Stack.Navigator>
         </NavigationContainer>
+        </CartProvider>
       </ProductProvider>
     </UserProvider>
   );

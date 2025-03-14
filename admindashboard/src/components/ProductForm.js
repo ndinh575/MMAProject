@@ -1,51 +1,73 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useProduct } from "@/context/ProductContext";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
 import { useCustomer } from "@/context/CustomerContext";
 import { useRouter } from "next/navigation";
+
+const INITIAL_PRODUCT_STATE = {
+    name: "",
+    description: "", 
+    cost_price: "",
+    selling_price: "",
+    stock_quantity: "",
+    image_url: "",
+    category: "",
+    expiry: "",
+    origin: "",
+    sendFrom: "",
+    weight: ""
+};
+
 const ProductForm = () => {
     const router = useRouter();
     const { verifyToken } = useCustomer();
     const { addProduct, currentProduct, setCurrentProduct, updateProduct } = useProduct();
     const [loading, setLoading] = useState(true);
-    const [product, setProduct] = useState({
-        name: "",
-        description: "",
-        cost_price: "",
-        selling_price: "",
-        stock_quantity: "",
-        image_url: "",
-        category: ""
-    });
-
-    const checkAuth = async () => {
-        const verifiedUser = await verifyToken();
-        if (!verifiedUser) {
-            router.push("/login"); // Redirect to login if not authenticated
-        } else {
-            setLoading(false); // Allow rendering only when authenticated
-        }
-    };
+    const [product, setProduct] = useState(INITIAL_PRODUCT_STATE);
 
     useEffect(() => {
-        checkAuth();
-        if (currentProduct) {
-            setProduct(currentProduct);
-        }
+        const initializeForm = async () => {
+            const verifiedUser = await verifyToken();
+            if (!verifiedUser) {
+                router.push("/login");
+                return;
+            }
+            
+            if (currentProduct) {
+                setProduct(currentProduct);
+            }
+            setLoading(false);
+        };
+
+        initializeForm();
     }, []);
 
     const handleChange = (e) => {
-        setProduct({ ...product, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setProduct(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
-        reader.readAsDataURL(file);
         reader.onloadend = () => {
-            setProduct({ ...product, image_url: reader.result }); // Convert image to base64
+            setProduct(prev => ({
+                ...prev,
+                image_url: reader.result
+            }));
         };
+        reader.readAsDataURL(file);
+    };
+
+    const resetForm = () => {
+        setCurrentProduct(null);
+        setProduct(INITIAL_PRODUCT_STATE);
     };
 
     const handleSubmit = async (e) => {
@@ -56,16 +78,7 @@ const ProductForm = () => {
             } else {
                 await addProduct(product);
             }
-            setCurrentProduct(null);
-            setProduct({
-                name: "",
-                description: "",
-                cost_price: "",
-                selling_price: "",
-                stock_quantity: "",
-                image_url: "",
-                category: ""
-            });
+            resetForm();
             router.push("/");
         } catch (error) {
             console.error("Error saving product:", error);
@@ -73,6 +86,20 @@ const ProductForm = () => {
     };
 
     if (loading) return null;
+
+    const renderFormField = (label, name, type = "text", as = "input") => (
+        <Form.Group className="mb-3">
+            <Form.Label>{label}</Form.Label>
+            <Form.Control
+                as={as}
+                type={type}
+                name={name}
+                value={product[name]}
+                onChange={handleChange}
+                required
+            />
+        </Form.Group>
+    );
 
     return (
         <Container className="mt-5">
@@ -83,53 +110,47 @@ const ProductForm = () => {
             </Row>
             <Row className="justify-content-md-center">
                 <Col md={6}>
-                    <h2 className="text-center mb-4">{currentProduct ? "Update Product" : "Add Product"}</h2>
-                    <Form onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Product Name</Form.Label>
-                            <Form.Control type="text" name="name" value={product.name} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control as="textarea" name="description" value={product.description} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Cost Price</Form.Label>
-                            <Form.Control type="number" name="cost_price" value={product.cost_price} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Selling Price</Form.Label>
-                            <Form.Control type="number" name="selling_price" value={product.selling_price} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Stock Quantity</Form.Label>
-                            <Form.Control type="number" name="stock_quantity" value={product.stock_quantity} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
-                            <Form.Control type="text" name="category" value={product.category} onChange={handleChange} required />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Upload Image</Form.Label>
-                            <Form.Control type="file" accept="image/*" onChange={handleImageUpload} required={!currentProduct} />
-                        </Form.Group>
-
-                        {product.image_url && (
-                            <div className="mb-3 text-center">
-                                <img src={product.image_url} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover" }} />
-                            </div>
-                        )}
-
-                        <Button variant="primary" type="submit" className="w-100">
+                    <Card className="p-4">
+                        <h2 className="text-center mb-4">
                             {currentProduct ? "Update Product" : "Add Product"}
-                        </Button>
-                    </Form>
+                        </h2>
+                        <Form onSubmit={handleSubmit}>
+                            {renderFormField("Product Name", "name")}
+                            {renderFormField("Description", "description", "text", "textarea")}
+                            {renderFormField("Cost Price", "cost_price", "number")}
+                            {renderFormField("Selling Price", "selling_price", "number")}
+                            {renderFormField("Stock Quantity", "stock_quantity", "number")}
+                            {renderFormField("Category", "category")}
+                            {renderFormField("Expiry", "expiry")}
+                            {renderFormField("Origin", "origin")}
+                            {renderFormField("Send From", "sendFrom")}
+                            {renderFormField("Weight", "weight")}
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Upload Image</Form.Label>
+                                <Form.Control 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleImageUpload} 
+                                    required={!currentProduct} 
+                                />
+                            </Form.Group>
+
+                            {product.image_url && (
+                                <div className="mb-3 text-center">
+                                    <img 
+                                        src={product.image_url} 
+                                        alt="Preview" 
+                                        style={{ width: "100px", height: "100px", objectFit: "cover" }} 
+                                    />
+                                </div>
+                            )}
+
+                            <Button variant="primary" type="submit" className="w-100">
+                                {currentProduct ? "Update Product" : "Add Product"}
+                            </Button>
+                        </Form>
+                    </Card>
                 </Col>
             </Row>
         </Container>
