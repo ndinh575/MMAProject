@@ -1,7 +1,7 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 const User = require('../models/User');
-
+const Product = require('../models/Product');
 exports.createOrder = async (req, res) => {
     try {
         const { products, totalAmount, userId, shippingAddress } = req.body;
@@ -12,6 +12,21 @@ exports.createOrder = async (req, res) => {
             shipping_address: shippingAddress,
             total: totalAmount,
         });
+
+        for (const item of products) {
+            const product = await Product.findById(item.id);
+
+            if (!product) {
+                return res.status(404).json({ error: `Product not found: ${item.id}` });
+            }
+
+            if (product.stock_quantity < item.quantity) {
+                return res.status(400).json({ error: `Insufficient stock for: ${product.name}` });
+            }
+
+            product.stock_quantity -= item.quantity;
+            await product.save();
+        }
 
         await order.save();
 

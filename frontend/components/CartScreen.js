@@ -14,13 +14,14 @@ import { CartContext } from '../context/CartContext';
 import { usePayment } from '../context/PaymentContext';
 import { useStripe } from "@stripe/stripe-react-native";
 import { UserContext } from '../context/UserContext';
-
+import { ProductContext } from '../context/ProductContext';
 const CartScreen = ({ navigation }) => {
     const { user } = useContext(UserContext);
     const { cart, updateQuantity, removeFromCart, clearCart } = useContext(CartContext);
     const [loading, setLoading] = useState(false);
     const { fetchPaymentIntent, confirmPayment } = usePayment();
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
+    const { fetchProducts } = useContext(ProductContext);
 
     const calculateTotal = () => {
         return cart.reduce((total, item) => total + (item.selling_price * item.quantity), 0);
@@ -112,6 +113,10 @@ const CartScreen = ({ navigation }) => {
     
                 // Clear cart after successful checkout
                 clearCart();
+
+                fetchProducts();
+                
+                navigation.navigate('Orders');
             }
         } catch (error) {
             Alert.alert("Checkout Error", error.response?.data?.error || error.message);

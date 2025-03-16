@@ -15,7 +15,7 @@ import { ProductContext } from "../context/ProductContext";
 const ProductDetailScreen = () => {
     const navigation = useNavigation();
     const { addToCart } = useContext(CartContext);
-    const { currentProduct } = useContext(ProductContext);
+    const { currentProduct, setCurrentProduct } = useContext(ProductContext);
 
 
     if (!currentProduct) {
@@ -31,7 +31,10 @@ const ProductDetailScreen = () => {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => navigation.goBack()}
+                    onPress={() => {
+                        setCurrentProduct(null);
+                        navigation.goBack();
+                    }}
                 >
                     <Icon name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
@@ -44,8 +47,17 @@ const ProductDetailScreen = () => {
                 </Text>
                 <Text style={styles.productDescription}>{currentProduct.description}</Text>
 
-                <TouchableOpacity
-                    style={styles.addToCartButton}
+                <View style={styles.infoContainer}>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Category:</Text> {currentProduct.category}</Text>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Stock:</Text> {currentProduct.stock_quantity} left</Text>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Expiry:</Text> {currentProduct.expiry || "N/A"}</Text>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Origin:</Text> {currentProduct.origin || "Unknown"}</Text>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Ships From:</Text> {currentProduct.sendFrom || "Not specified"}</Text>
+                    <Text style={styles.infoText}><Text style={styles.bold}>Weight:</Text> {currentProduct.weight || "N/A"}</Text>
+                </View>
+
+                <TouchableOpacity 
+                    style={styles.addToCartButton} 
                     onPress={() => addToCart(currentProduct)}
                 >
                     <Text style={styles.buttonText}>Add to Cart</Text>
@@ -132,6 +144,17 @@ const styles = StyleSheet.create({
     errorText: {
         fontSize: 18,
         color: "red",
+    },
+    infoContainer: {
+        marginVertical: 10,
+    },
+    infoText: {
+        fontSize: 16,
+        color: "#444",
+        marginBottom: 5,
+    },
+    bold: {
+        fontWeight: "bold",
     },
 });
 
