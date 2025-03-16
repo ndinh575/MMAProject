@@ -10,7 +10,6 @@ import {
     RefreshControl,
     Image
 } from "react-native";
-import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import { UserContext } from "../context/UserContext";
 import { usePayment } from "../context/PaymentContext";
@@ -20,7 +19,6 @@ const OrdersScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [expandedOrderId, setExpandedOrderId] = useState(null);
-    
     const { user } = useContext(UserContext); 
     const userId = user?._id || "123"; 
 
@@ -77,7 +75,7 @@ const OrdersScreen = () => {
             {expandedOrderId === item._id && (
                 <View style={styles.orderDetails}>
                     {item.products.map((product, index) => (
-                        <View key={index} style={styles.productItem}>
+                        <View key={index} style={styles.productItem} >
                             {product.id.image_url && (
                                 <Image source={{ uri: product.id.image_url }} style={styles.productImage} />
                             )}

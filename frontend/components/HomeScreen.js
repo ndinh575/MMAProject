@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const HomeScreen = () => {
   const { logout } = useContext(UserContext);
   const navigation = useNavigation();
-  const { products, loading, fetchProducts } = useContext(ProductContext);
+  const { products, loading, fetchProducts, setCurrentProduct } = useContext(ProductContext);
   const { addToCart, getCartItemCount } = useContext(CartContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -48,7 +48,10 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => {
+      setCurrentProduct(item);
+      navigation.navigate('ProductDetail');
+    }} >
       <Image source={{ uri: item.image_url }} style={styles.image} />
       <View style={styles.info}>
         <View style={styles.nameRow}>

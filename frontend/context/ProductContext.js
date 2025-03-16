@@ -20,12 +20,23 @@ export const ProductProvider = ({ children }) => {
         }
     };
 
+    const fetchProductById = async (productId) => {
+        try {
+            const response = await axios.get(`http://192.168.137.1:9999/api/products/${productId}`);
+            setCurrentProduct(response.data);
+        } catch (error) {
+            console.error("Error fetching product:", error);    
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchProducts();
     }, []);
 
     return (
-        <ProductContext.Provider value={{ products, loading, currentProduct, setCurrentProduct, fetchProducts }}>
+        <ProductContext.Provider value={{ products, loading, currentProduct, setCurrentProduct, fetchProducts, fetchProductById }}>
             {children}
         </ProductContext.Provider>
     );

@@ -18,6 +18,8 @@ import EditProfileScreen from './components/EditProfileScreen';
 import ShippingAddressScreen from './components/ShippingAddressScreen';
 import ChangePasswordScreen from './components/ChangePasswordScreen';
 import CartScreen from './components/CartScreen';
+import ProductDetailScreen from './components/ProductDetailScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +40,7 @@ const MainStack = () => (
     <Stack.Screen name="ShippingAddress" component={ShippingAddressScreen} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     <Stack.Screen name="Cart" component={CartScreen} />
+    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
   </Stack.Navigator>
 );
 
