@@ -5,6 +5,8 @@ import { StyleSheet } from 'react-native';
 import { UserProvider } from './context/UserContext';
 import { ProductProvider } from './context/ProductContext';
 import { CartProvider } from './context/CartContext';
+import { PaymentProvider } from './context/PaymentContext';
+import { StripeProviderComponent } from './context/StripeProvider';
 // Auth Screens
 import LoginScreen from './components/LoginScreen';
 import RegisterScreen from './components/RegisterScreen';
@@ -43,6 +45,8 @@ export default function App() {
   return (
     <UserProvider>
       <ProductProvider>
+        <StripeProviderComponent>
+        <PaymentProvider>
         <CartProvider>
         <NavigationContainer>
           <Stack.Navigator 
@@ -54,6 +58,8 @@ export default function App() {
           </Stack.Navigator>
         </NavigationContainer>
         </CartProvider>
+          </PaymentProvider>
+          </StripeProviderComponent>
       </ProductProvider>
     </UserProvider>
   );

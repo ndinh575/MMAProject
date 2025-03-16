@@ -11,10 +11,16 @@ import {
 import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { CartContext } from '../context/CartContext';
+import { usePayment } from '../context/PaymentContext';
+import { useStripe } from "@stripe/stripe-react-native";
+import { UserContext } from '../context/UserContext';
 
 const CartScreen = ({ navigation }) => {
+    const { user } = useContext(UserContext);
     const { cart, updateQuantity, removeFromCart, clearCart } = useContext(CartContext);
     const [loading, setLoading] = useState(false);
+    const { fetchPaymentIntent, confirmPayment } = usePayment();
+    const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
     const calculateTotal = () => {
         return cart.reduce((total, item) => total + (item.selling_price * item.quantity), 0);
@@ -49,12 +55,69 @@ const CartScreen = ({ navigation }) => {
         updateQuantity(itemId, newQuantity);
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (cart.length === 0) {
             Alert.alert('Empty Cart', 'Please add items to your cart before checking out.');
             return;
         }
-        navigation.navigate('Checkout');
+        setLoading(true);
+        try {
+            // Prepare cart details
+            const orderData = {
+                userId: user._id,
+                products: cart.map(item => ({
+                    id: item._id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.selling_price,
+                    total: item.selling_price * item.quantity,
+                })),
+                totalAmount: calculateTotal(),
+                shippingAddress: user.address.formattedAddress,
+            };
+    
+            // Send order details to backend using Axios
+            const response = await fetchPaymentIntent(orderData);
+    
+            const { clientSecret, orderId } = response;
+    
+            if (!clientSecret) {
+                setLoading(false);
+                Alert.alert("Error", "Failed to create payment session.");
+                return;
+            }
+    
+            // Initialize Payment Sheet
+            const { error } = await initPaymentSheet({
+                paymentIntentClientSecret: clientSecret,
+                merchantDisplayName: 'Heal Tea',
+            });
+    
+            if (error) {
+                setLoading(false);
+                Alert.alert("Error", error.message);
+                return;
+            }
+    
+            // Show Payment Sheet
+            const { error: paymentError } = await presentPaymentSheet();
+    
+            if (paymentError) {
+                Alert.alert("Payment Failed", paymentError.message);
+            } else {
+                Alert.alert("Success", "Payment completed successfully!");
+    
+                // Confirm order in backend
+                await confirmPayment(orderId);
+    
+                // Clear cart after successful checkout
+                clearCart();
+            }
+        } catch (error) {
+            Alert.alert("Checkout Error", error.response?.data?.error || error.message);
+        }
+    
+        setLoading(false);
     };
 
     const renderEmptyCart = () => (

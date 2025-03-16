@@ -3,33 +3,55 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
 const connectDB = require('./config/db');
-const bodyParser = require("body-parser");
-const authRoutes = require('./routes/auth');
-const protectedRoutes = require('./routes/protectedRoute');
-const productRoutes = require('./routes/productRoute');
-// Các route khác
+
+// Constants
+const PORT = process.env.PORT || 9999;
+const PAYLOAD_LIMIT = "10mb";
+
+// Route imports 
+const routes = {
+  auth: require('./routes/auth'),
+  protected: require('./routes/protectedRoute'),
+  products: require('./routes/productRoute'),
+  payment: require('./routes/paymentRoute'),
+};
+
+// Initialize express app
 const app = express();
 
-// Cấu hình Express
-app.use(express.json({ limit: "10mb" })); // Handles JSON, including Base64 images
-app.use(express.urlencoded({ extended: true, limit: "10mb" })); // Handles URL-encoded form data
+// Configure middleware
+const configureMiddleware = (app) => {
+  app.use(express.json({ limit: PAYLOAD_LIMIT }));
+  app.use(express.urlencoded({ extended: true, limit: PAYLOAD_LIMIT }));
+  app.use(cookieParser());
+  app.use(cors({
+    origin: true,
+    credentials: true
+  }));
+};
 
+// Configure routes
+const configureRoutes = (app) => {
+  app.use('/api/auth', routes.auth);
+  app.use('/api/protected', routes.protected);
+  app.use('/api/products', routes.products);
+  app.use('/api/payment', routes.payment);
+};
 
-app.use(
-  cors({
-    origin: true, // Allow all origins
-    credentials: true, // Allow cookies and authorization headers
-  })
-);
+// Initialize server
+const startServer = async () => {
+  try {
+    await connectDB();
+    configureMiddleware(app);
+    configureRoutes(app);
+    
+    app.listen(PORT, () => 
+      console.log(`Server running on port ${PORT}`)
+    );
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
 
-// MongoDB connection
-connectDB();
-app.use(cookieParser());
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/protected', protectedRoutes);
-app.use('/api/products', productRoutes);
-
-// Start server
-const PORT = process.env.PORT || 9999;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+startServer();
