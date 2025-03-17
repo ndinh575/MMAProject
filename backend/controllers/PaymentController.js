@@ -55,7 +55,7 @@ exports.confirmPayment = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
     try {
-        const orders = await Order.find();
+        const orders = await Order.find().populate('products.id', 'name quantity price total').populate('user', 'name');
         res.json(orders);
     } catch (error) {
         res.status(500).json({ error: "Failed to get orders" });

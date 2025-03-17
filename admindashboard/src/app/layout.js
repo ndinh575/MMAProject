@@ -3,7 +3,7 @@ import "./globals.css";
 import { CustomerProvider } from "@/context/CustomerContext";
 import { ProductProvider } from "@/context/ProductContext";
 import { CommonProvider } from "@/context/CommonContext";
-
+import { OrderProvider } from "@/context/OrderContext";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <CommonProvider>
     <CustomerProvider>
+      <OrderProvider>
       <ProductProvider>
         <html lang="en">
           <body>
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
           </body>
         </html>
       </ProductProvider>
+      </OrderProvider>
     </CustomerProvider>
     </CommonProvider>
   );

@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 
 import { Container, Navbar, Nav, Row, Col, Card, Button, Dropdown, Badge } from "react-bootstrap";
-import { FaBars, FaTachometerAlt, FaShoppingCart, FaUsers, FaChartLine, FaBell, FaUserCircle, FaBox } from "react-icons/fa";
-import DashBoard from "./DashBoard";
+import { FaShoppingCart, FaUsers, FaBox } from "react-icons/fa";
 import Orders from "./Orders";
 import Customers from "./Customers";
 import Products from "./Products";
@@ -43,9 +42,6 @@ export default function HomePage() {
             <div className="main-content flex-grow-1">
                 {/* Header */}
                 <Header />
-
-                {/* Dashboard Content */}
-                {selectedItem === "Dashboard" && <DashBoard />}
 
                 {selectedItem === "Orders" && <Orders />}
 

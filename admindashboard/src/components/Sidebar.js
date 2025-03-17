@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Nav } from "react-bootstrap";
-import {FaBox, FaShoppingCart, FaTachometerAlt, FaUsers } from "react-icons/fa";
+import {FaBox, FaShoppingCart, FaUsers } from "react-icons/fa";
 
 const Sidebar = ({ selectedItem, setSelectedItem }) => {
     return (
@@ -11,11 +11,6 @@ const Sidebar = ({ selectedItem, setSelectedItem }) => {
                 </div>
 
                 <Nav className="flex-column p-3 gap-4">
-                    <Nav.Link href="#"
-                        className={`text-white ${selectedItem === "Dashboard" ? "bg-primary" : ""}`}
-                        onClick={() => setSelectedItem("Dashboard")}>
-                        <FaTachometerAlt size={20} className="me-2" /> Dashboard
-                    </Nav.Link>
                     <Nav.Link href="#" className={`text-white ${selectedItem === "Orders" ? "bg-primary" : ""}`}
                         onClick={() => setSelectedItem("Orders")}>
                         <FaShoppingCart size={20} className="me-2" /> Orders
