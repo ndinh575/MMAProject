@@ -1,10 +1,27 @@
 "use client";
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Table, Pagination, Form, Button, Modal } from "react-bootstrap";
+import { Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useCustomer } from "@/context/CustomerContext";
 
 // Constants
+const CHART_HEIGHT = 300;
 const CUSTOMERS_PER_PAGE_OPTIONS = [5, 10, 15, 20];
+
+const ORDERS_DATA = [
+    { month: "Jan", orders: 120 },
+    { month: "Feb", orders: 150 },
+    { month: "Mar", orders: 180 },
+    { month: "Apr", orders: 200 },
+    { month: "May", orders: 220 },
+    { month: "Jun", orders: 240 },
+    { month: "Jul", orders: 260 },
+    { month: "Aug", orders: 280 },
+    { month: "Sep", orders: 300 },
+    { month: "Oct", orders: 320 },
+    { month: "Nov", orders: 340 },
+    { month: "Dec", orders: 360 },
+];
 
 // Utility functions
 const formatDate = (createdDate) => {
@@ -20,6 +37,21 @@ const calculatePagination = (customers, currentPage, customersPerPage) => {
 
     return { currentCustomers, totalPages };
 };
+
+// Chart Components
+const CustomerOrdersChart = () => (
+    <Card className="p-3 shadow-sm">
+        <h5>Customer Orders & Activity</h5>
+        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+            <BarChart data={ORDERS_DATA}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="orders" fill="#007bff" />
+            </BarChart>
+        </ResponsiveContainer>
+    </Card>
+);
 
 // Table Components
 const CustomerTableHeader = () => (
@@ -177,6 +209,12 @@ const Customers = () => {
     return (
         <Container fluid className="mt-4">
             <h4 className="mb-4">Customer Dashboard</h4>
+
+            <Row>
+                <Col>
+                    <CustomerOrdersChart />
+                </Col>
+            </Row>
 
             <Row className="mt-4">
                 <CustomerTable

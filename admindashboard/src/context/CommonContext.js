@@ -6,7 +6,7 @@ const CommonContext = createContext();
 
 // Provider Component
 export const CommonProvider = ({ children }) => {
-    const [selectedItem, setSelectedItem] = useState("Orders");
+    const [selectedItem, setSelectedItem] = useState("Dashboard");
     return (
         <CommonContext.Provider value={{ selectedItem, setSelectedItem }}>
             {children}

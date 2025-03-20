@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { Row, Col, Table, Form, Button, Modal } from "react-bootstrap";
-import { FaPlus } from "react-icons/fa";
+import { Row, Col, Card, Table, Form, Button, Modal } from "react-bootstrap";
+import { FaSearch, FaPlus } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useProduct } from "@/context/ProductContext";
 
 const Products = () => {
@@ -19,6 +20,15 @@ const Products = () => {
         .filter(product => product.name.toLowerCase().includes(search.toLowerCase()))
         .filter(product => filter ? product.category === filter : true);
 
+    // Sample data for chart - could be moved to a separate file/API
+    const chartData = [
+        { month: "Jan", sales: 400, stock: 2400 },
+        { month: "Feb", sales: 300, stock: 2210 },
+        { month: "Mar", sales: 500, stock: 2290 },
+        { month: "Apr", sales: 700, stock: 2000 },
+        { month: "May", sales: 600, stock: 2181 },
+        { month: "Jun", sales: 800, stock: 2500 },
+    ];
 
     // Event handlers
     const handleEdit = (product) => {
@@ -50,6 +60,26 @@ const Products = () => {
             console.error("Error deleting product:", error);
         }
     };
+
+    // Components
+    const ProductChart = () => (
+        <Row className="mb-4">
+            <Card className="p-3 shadow-sm">
+                <h5 className="text-center">Product Sales & Stock Trends</h5>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="sales" stroke="#8884d8" name="Sales" />
+                        <Line type="monotone" dataKey="stock" stroke="#82ca9d" name="Stock" />
+                    </LineChart>
+                </ResponsiveContainer>
+            </Card>
+        </Row>
+    );
 
     const SearchAndFilter = () => (
         <Row className="mb-3">
@@ -167,6 +197,7 @@ const Products = () => {
     return (
         <div className="container mt-4">
             <h3 className="text-center mb-4">Products Dashboard</h3>
+            <ProductChart />
             <SearchAndFilter />
             <ProductTable />
             <DeleteModal />
