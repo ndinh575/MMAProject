@@ -73,5 +73,34 @@ exports.sendOTP = async (req, res) => {
     }
 };
 
+exports.verifyOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        const storedData = otpStore.get(email);
+        
+        if (!storedData) {
+            return res.status(400).json({ message: 'No OTP found for this email' });
+        }
+
+        if (Date.now() > storedData.expiry) {
+            otpStore.delete(email);
+            return res.status(400).json({ message: 'OTP has expired' });
+        }
+
+        if (storedData.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        // Clear OTP after successful verification
+        otpStore.delete(email);
+
+        res.status(200).json({ message: 'OTP verified successfully' });
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({ message: 'Error verifying OTP', error: error.message });
+    }
+}; 
+
 // Export otpStore for middleware use
 exports.otpStore = otpStore;

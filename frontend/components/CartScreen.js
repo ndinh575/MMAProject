@@ -61,6 +61,11 @@ const CartScreen = ({ navigation }) => {
             Alert.alert('Empty Cart', 'Please add items to your cart before checking out.');
             return;
         }
+
+        if(!user.address.formattedAddress){
+            Alert.alert('No shipping address', 'Please update shipping address in profile tab');
+            return;
+        }
         setLoading(true);
         try {
             // Prepare cart details

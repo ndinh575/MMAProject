@@ -8,6 +8,17 @@ export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+
+    const verifyOTP = async (email, otp) => {
+        try {
+            const response = await axios.post('http://192.168.137.1:9999/api/auth/verify-otp', { email, otp });
+            return response.data;
+        } catch (error) {
+            console.error('Error verifying OTP:', error);
+            throw error;    
+        }
+    };
+
     const loadUserData = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -166,6 +177,7 @@ export const UserProvider = ({ children }) => {
             refreshUser: loadUserData,
             createUser,
             sendOTP,
+            verifyOTP,
             resetPassword,
             changePassword
         }}>

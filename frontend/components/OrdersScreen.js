@@ -13,14 +13,15 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { UserContext } from "../context/UserContext";
 import { usePayment } from "../context/PaymentContext";
+import { Button } from "react-native-elements";
 
 const OrdersScreen = () => {
     const [userOrders, setUserOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [expandedOrderId, setExpandedOrderId] = useState(null);
-    const { user } = useContext(UserContext); 
-    const userId = user?._id || "123"; 
+    const { user } = useContext(UserContext);
+    const userId = user?._id || "123";
 
     const { getUserOrders } = usePayment();
 
@@ -107,6 +108,10 @@ const OrdersScreen = () => {
                 <View style={styles.emptyContainer}>
                     <Icon name="cart-outline" size={80} color="#ccc" />
                     <Text style={styles.emptyText}>No orders found</Text>
+                    <Button
+                        title="Refresh Orders"
+                        onPress={fetchOrders}
+                    />
                 </View>
             ) : (
                 <FlatList

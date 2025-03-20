@@ -13,13 +13,13 @@ router.get('/me', verifyToken, UserController.getUserProfile);
 router.get('/users', UserController.getAllUsers);
 router.put('/update-profile', verifyToken, UserController.updateUserProfile);
 router.get('/verify-token', verifyToken, verifyAdmin, (req, res) => res.json({ message: 'Token is valid' }));
-
 router.route('/users/:id')
     .get(verifyToken, UserController.getUser)
     .delete(verifyToken, verifyAdmin, UserController.deleteUser);
 
 // OTP Routes
 router.post('/send-otp', OTPController.sendOTP);
+router.post('/verify-otp', OTPController.verifyOTP);
 
 // Password management routes
 router.post('/forgot-password', UserController.forgotPassword);
